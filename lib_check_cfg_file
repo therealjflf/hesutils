@@ -1,0 +1,144 @@
+#!/bin/bash
+
+# ==============================================================================
+# HESUTILS CONFIGURATION FILE CHECKER
+# ==============================================================================
+
+
+# Helper functions
+# ------------------------------------------------------------------------------
+
+# Sanitize the contents of binary parameters
+# $1    default value
+# $2+   parameter names
+
+function sanitize_binary_params {
+
+    local i
+    local def=$1
+    shift
+
+    for i in "${@}" ; do
+        case "x${!i}" in
+            x0)     eval ${i}=0 ;;
+            x1)     eval ${i}=1 ;;
+            x)      eval ${i}=$def ;;
+            *)      echo "ERROR: Invalid value for parameter ${i}: ${!i}" >&2
+                    exit 1 ;;
+        esac
+        #echo "${i}: ${!i}"
+    done
+}
+
+
+# Check if variables are empty or contains integers
+# $1+   variable names
+
+function check_integers {
+
+    local i
+    for i in "${@}" ; do
+        if ! [[ ${!i} =~ ^[0-9]*$ ]] ; then
+            echo "ERROR: The option $i requires an integer value." >&2
+            exit 1
+        fi
+    done
+}
+
+
+# Check if the directory of a file path contained in a variable, is indeed a
+# directory.
+# $1    variable name
+
+function check_directory {
+
+    local dirname
+    dirname="$(dirname "${!1}")"
+    if ! [[ -d "$dirname" ]] ; then
+        echo "ERROR: The directory doesn't exist: ${1}=${!1}" >&2
+        exit 1
+    fi
+}
+
+
+
+# Check all the variables and assign default values
+# ------------------------------------------------------------------------------
+
+function check_cfg_file {
+
+    # LHS can be empty, RHS cannot
+    [[ "$RHS" ]] || RHS=".hesiod"
+
+    # The standard calls for LHS and RHS starting with leading dots. Those just get
+    # in the way, so strip them.
+    LHS="${LHS#.}"
+    RHS="${RHS#.}"
+
+    # With the LHS and RHS we can build the full domain
+    hesdomain="${LHS:+${LHS}.}${RHS}"
+
+
+    # Check if all UID and GID values are empty or integers
+    check_integers {UID,GID}{MIN,MAX}
+
+    # Set default values if they're empty
+    [[ "$UIDMIN" ]] || UIDMIN=5000
+    [[ "$UIDMAX" ]] || UIDMAX=5999
+    [[ "$GIDMIN" ]] || GIDMIN=$UIDMIN
+    [[ "$GIDMAX" ]] || GIDMAX=$UIDMAX
+
+    # Check the UID and GID values
+    if (( UIDMIN > UIDMAX || GIDMIN > GIDMAX )) ; then
+        echo "ERROR: UIDMAX / GIDMAX cannot be inferior to than UIDMIN / GIDMIN." >&2
+        exit 1
+    fi
+
+    if (( UIDMIN < 1000 )) ; then
+        echo "WARNING: System users cannot be exported, setting UIDMIN to 1000 (was $UIDMIN)." >&2
+        UIDMIN=1000
+    fi
+
+    if (( GIDMIN < 1000 )) ; then
+        echo "WARNING: System groups cannot be exported, setting GIDMIN to 1000 (was $GIDMIN)." >&2
+        GIDMIN=1000
+    fi
+
+
+    # HOMEDIRSED and FSSERVER can't really be checked -- they can be anything.
+
+    # I don't really want to check the FSTYPE. The documentation on the Linux
+    # side is poor at best. I can't find an authoritative list of what is or is
+    # not supported, so every case imaginable will need to be tested.
+    # So yeah, let it be whatever the user wants and caveat emptor.
+
+    if [[ "$FSMAPFILE" && ! -r "$FSMAPFILE" ]] ; then
+        echo "ERROR: The automount map file doesn't exist or is not readable: $FSMAPFILE" >&2
+        exit 1
+    fi
+
+
+    # Check the binary options that default to 0
+    sanitize_binary_params 0 FILSYS GEN{BIND,UNBOUND}
+
+    # Check the binary options that default to 1
+    sanitize_binary_params 1 GENDNSMASQ RESTARTDNS BLOCK{UPSTREAM,ATHENA}
+
+
+    # Check the various paths
+    if (( GENDNSMASQ )) ; then
+        DNSMASQPATH="${DNSMASQPATH:-/etc/dnsmasq.d/${hesdomain}.conf}"
+        check_directory DNSMASQPATH
+    fi
+
+    if (( GENUNBOUND )) ; then
+        UNBOUNDPATH="${UNBOUNDPATH:-/etc/unbound/unbound.conf.d/${hesdomain}.conf}"
+        check_directory UNBOUNDPATH
+    fi
+
+    if (( GENBIND )) ; then
+        BINDPATH="${BINDPATH:-/etc/bind/${hesdomain}.db}"
+        check_directory BINDPATH
+    fi
+}
+
