@@ -76,7 +76,7 @@ function check_cfg_file {
     RHS="${RHS#.}"
 
     # With the LHS and RHS we can build the full domain
-    hesdomain="${LHS:+${LHS}.}${RHS}"
+    HESDOMAIN="${LHS:+${LHS}.}${RHS}"
 
 
     # Check if all UID and GID values are empty or integers
@@ -127,17 +127,17 @@ function check_cfg_file {
 
     # Check the various paths
     if (( GENDNSMASQ )) ; then
-        DNSMASQPATH="${DNSMASQPATH:-/etc/dnsmasq.d/${hesdomain}.conf}"
+        DNSMASQPATH="${DNSMASQPATH:-/etc/dnsmasq.d/${HESDOMAIN}.conf}"
         check_directory DNSMASQPATH
     fi
 
     if (( GENUNBOUND )) ; then
-        UNBOUNDPATH="${UNBOUNDPATH:-/etc/unbound/unbound.conf.d/${hesdomain}.conf}"
+        UNBOUNDPATH="${UNBOUNDPATH:-/etc/unbound/unbound.conf.d/${HESDOMAIN}.conf}"
         check_directory UNBOUNDPATH
     fi
 
     if (( GENBIND )) ; then
-        BINDPATH="${BINDPATH:-/etc/bind/${hesdomain}.db}"
+        BINDPATH="${BINDPATH:-/etc/bind/${HESDOMAIN}.db}"
         check_directory BINDPATH
     fi
 }
