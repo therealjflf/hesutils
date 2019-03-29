@@ -1,0 +1,314 @@
+#!/bin/bash
+
+# ==============================================================================
+#
+# passwd2hesiod
+#
+# ------------------------------------------------------------------------------
+#
+# Read the information contained in /etc/passwd and /etc/groups, and generate
+# DNS configuration files containing Hesiod entries for selected users and
+# groups.
+# 
+# ==============================================================================
+
+
+
+# Boilerplate stuff
+# ------------------------------------------------------------------------------
+
+# Safety first
+set -e -o pipefail
+
+# Check for root
+#if (( UID != 0 )) ; then
+#    echo "ERROR: This command must be run as root." >&2
+#    exit 1
+#fi
+
+
+
+# The mandatory help message
+# ------------------------------------------------------------------------------
+
+function print_help {
+
+    echo "
+Usage:  $(basename "$0") [options]
+
+Options:
+
+  -h                display this help message and exit
+  -v                run in verbose mode
+  -n                dry run: don't modify files, print to the standard output
+  -c <filename>     use an alternative configuration file
+  -p <filename>     use an alternative passwd file
+  -g <filename>     use an alternative group file
+"
+}
+
+
+
+# Cleanup function
+# ------------------------------------------------------------------------------
+
+function victor {
+    [[ -d "$tmpdir" ]] && rm -fr "$tmpdir"
+}
+
+trap victor EXIT ERR
+
+
+
+# Variables that can be overriden via the environment
+# ------------------------------------------------------------------------------
+
+# We need to know where we are first
+# The PATH hack is needed to work correctly with "bash -x script"
+fullpath="$(dirname "$(readlink -f "$(PATH=${PATH}:. which "$0")")")"
+
+if [[ "$fullpath" ]] ; then
+    prefix="${fullpath%/bin*}"
+else
+    # we should always be able to detect our prefix
+    # --> this codepath should never be taken!
+    echo "WARNING: Could not detect the installation prefix, using default: /usr" >&2
+    prefix="/usr"
+fi
+
+
+HESPREFIX="${HESPREFIX:-${prefix}}"
+HESLIBPREFIX="${HESLIBPREFIX:-${HESPREFIX}/share/hesutils}"
+
+if ! [[ -d "$HESLIBPREFIX" ]] ; then
+    echo "ERROR: The HESLIBPREFIX directory doesn't exist: $HESLIBPREFIX
+       See the Hesutils documentation for more details." >&2
+    exit 1
+fi
+
+
+# Those can be defined via the command line too, which has priority
+# They will be checked after the parameter parsing
+HESCFGFILE="${HESCFGFILE:-/etc/hesutils.conf}"
+HESPASSWDFILE="${HESPASSWDFILE:-/etc/passwd}"
+HESGROUPFILE="${HESGROUPFILE:-/etc/group}"
+
+
+
+# Internal variables
+# ------------------------------------------------------------------------------
+
+libfiles=( lib_check_cfg_file
+           lib_gen_bind
+           lib_gen_dnsmasq
+           lib_gen_unbound )
+
+for i in ${libfiles[@]} ; do
+    source "${HESLIBPREFIX}/${i}"
+done
+
+
+# As we can't query /etc/passwd and /etc/group like a database, we'll need a
+# bunch of tables to contain the lookups that we do.
+
+declare -a uid2user         # index: UID
+declare -A hesusers         # index: user name
+declare -A primarygid       # index: user name
+declare -a gid2group        # index: GID
+declare -A hesgroups        # index: group name
+declare -A hesgrplists      # index: user name
+
+
+# We need a temporary directory
+tmpdir=$(mktemp -d --tmpdir hesutils.XXXX) || exit 1
+
+declare -i verbose=0
+declare -i dryrun=0
+
+
+
+# Time to parse the parameters
+# ------------------------------------------------------------------------------
+
+OPTIND=1
+optstring=":hvnc:p:g:"
+
+while getopts $optstring name ; do
+    case $name in
+        h)  print_help
+            exit 0
+            ;;
+        v)  verbose=1
+            ;;
+        n)  dryrun=1
+            ;;
+        c)  HESCFGFILE="$OPTARG"
+            ;;
+        p)  HESPASSWDFILE="$OPTARG"
+            ;;
+        g)  HESGROUPFILE="$OPTARG"
+            ;;
+        :)  echo "ERROR: The option \"-$OPTARG\" requires a parameter." >&2
+            print_help
+            exit 1
+            ;;
+        *)  echo "ERROR: Unknown option: -$OPTARG" >&2
+            print_help
+            exit 1
+    esac
+done
+
+# Drop all processed options and leave only the non-option parameters.
+# We don't actually need this right now, but we may some day!
+shift "$(( OPTIND - 1 ))"
+
+
+
+# Check whether the various files exist
+# ------------------------------------------------------------------------------
+
+for file in HES{CFG,PASSWD,GROUP}FILE ; do
+    if ! [ -r "${!file}" ] ; then
+        echo "ERROR: The file doesn't exist or is not readable: ${file}=${!file}" >&2
+        exit 1
+    fi
+done
+
+
+# Time to display some info
+if (( verbose )) ; then
+    echo "
+Configuration file: $HESCFGFILE
+Passwd file:        $HESPASSWDFILE
+Group file:         $HESGROUPFILE
+"
+fi
+
+
+
+# Load and check the configuration file
+# ------------------------------------------------------------------------------
+
+(( verbose )) && echo "Loading the configuration file"
+source "$HESCFGFILE"
+
+(( verbose )) && echo "Checking the configuration file"
+check_cfg_file      # exits in case of errors, checks and assigns default values
+
+
+
+# Parse /etc/passwd to obtain the relevant information
+# ------------------------------------------------------------------------------
+
+# /etc/passwd fields:
+#  0  user name
+#  1  password
+#  2  UID
+#  3  primary GID
+#  4  GECOS
+#  5  home directory
+#  6  shell
+
+(( verbose )) && echo -en "\nProcessing the passwd file entries: "
+
+while IFS=: read -a passwd ; do
+
+    # only deal with Hesiod users
+    if (( UIDMIN <= ${passwd[2]} && ${passwd[2]} <= UIDMAX )) ; then
+        (( verbose )) && echo -n "."
+    else
+        (( verbose )) && echo -n "x"
+        continue
+    fi
+
+    # and Hesiod user whose primary group is a Hesiod group too
+    if ! (( GIDMIN <= ${passwd[3]} && ${passwd[3]} <= GIDMAX )) ; then
+        echo -e "\nERROR: The primary GID for user ${passwd[0]} isn't in the GIDMIN-GIDMAX range: ${passwd[3]}" >&2
+        exit 1
+    fi
+    
+    # start with cleaning up
+    # we need to pretend the account is disabled. It's complicated.
+    passwd[1]="*"
+    # clear the GECOS field, to shorten the TXT records and avoid spaces
+    passwd[4]=
+
+    # some distros don't add a given user to its own group in /etc/passwd...
+    # (I'm looking at you Debian and derivatives!)
+    hesgrplists[${passwd[0]}]="${passwd[3]}"
+
+    # do we need to modify the exported home directory?
+    [[ "$HOMEDIRSED" ]] && passwd[5]="$(echo "${passwd[5]}" | sed $HOMEDIRSED)"
+
+    # and finally, store that user's data
+    uid2user[${passwd[2]}]=${passwd[0]}
+    primarygid[${passwd[0]}]=${passwd[3]}
+    hesusers[${passwd[0]}]="$(IFS=: ; echo "${passwd[*]}")"
+
+done < "$HESPASSWDFILE"
+
+(( verbose )) && echo -e "\n  --> ${#hesusers[@]} Hesiod users"
+
+
+
+# Parse /etc/group to obtain the relevant information
+# ------------------------------------------------------------------------------
+
+# /etc/group fields:
+#  0  group name
+#  1  group password (yup, that exists apparently)
+#  2  GID
+#  3  user list, comma-separated
+
+(( verbose )) && echo -n "Processing the group file entries: "
+
+while IFS=: read -a group ; do
+
+    hesmembers=""
+
+    # only deal with Hesiod groups
+    if (( GIDMIN <= ${group[2]} && ${group[2]} <= GIDMAX )) ; then
+        (( verbose )) && echo -n "."
+    else
+        (( verbose )) && echo -n "x"
+        continue
+    fi
+
+    # check the membership of the group, and add that group to the grplist of
+    # the Hesiod users that we know of already
+
+    while read -d, member ; do
+        # only if we know the user already, and if it's not their primary group
+        # (as we added that one first)
+        if [[ " $member " =~ " ${!hesusers[@]} " ]] ; then
+            hesmembers+="${member},"
+            if [[ ${group[2]} != ${primarygid[$member]} ]] ; then
+                hesgrplists[${member}]+=":${group[2]}"
+            fi
+        fi
+    done < <(echo "${group[3]},")
+    # without the comma above ^ the read misses the last member...
+
+    # change the membership list to keep only Hesiod members
+    #group[3]="${hesmembers%,}"
+    group[3]=
+
+    # and finally, store that group's data
+    gid2group[${group[2]}]=${group[0]}
+    hesgroups[${group[0]}]="$(IFS=: ; echo "${group[*]}")"
+
+done < "$HESGROUPFILE"
+
+(( verbose )) && echo -e "\n  --> ${#hesgroups[@]} Hesiod groups"
+
+
+
+# Generate the configuration files
+# ------------------------------------------------------------------------------
+
+(( GENDNSMASQ )) && { gen_dnsmasq ; (( RESTARTDNS )) && restart_dnsmasq ; }
+(( GENUNBOUND )) && { gen_unbound ; (( RESTARTDNS )) && restart_unbound ; }
+(( GENBIND ))    && { gen_bind    ; (( RESTARTDNS )) && restart_bind ; }
+
+# And we're done!
+
