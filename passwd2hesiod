@@ -53,6 +53,9 @@ Options:
 # ------------------------------------------------------------------------------
 
 function victor {
+    # clean any existing redirection to a dns config output file
+    { >&3; } 2>/dev/null && exec 3>&-
+
     [[ -d "$tmpdir" ]] && rm -fr "$tmpdir"
 }
 
