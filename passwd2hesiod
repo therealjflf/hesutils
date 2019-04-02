@@ -104,7 +104,8 @@ HESGROUPFILE="${HESGROUPFILE:-/etc/group}"
 libfiles=( lib_check_cfg_file
            lib_gen_bind
            lib_gen_dnsmasq
-           lib_gen_unbound )
+           lib_gen_unbound
+           lib_utils )
 
 for i in ${libfiles[@]} ; do
     source "${HESLIBPREFIX}/${i}"

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# ==============================================================================
+# Hesutils library: miscellaneous helper functions
+# ==============================================================================
+
+
+# DNS config generation utilities
+# ------------------------------------------------------------------------------
+
+# Prepare (aka. sanitize) a string that will go into a TXT record:
+# - local encoding --> ASCII
+# - wrap it at the 255-byte mark
+# - add backslash before any double-quote
+# 
+# Prints one or more line of sanitized text to stdout.
+#
+# $1    name of the variable containing the string
+
+function prepare_TXT_string {
+    (( $# )) && echo -n ${!1} | iconv -t ascii//translit | fold -w 255 | sed 's/"/\\"/g'
+}
+
