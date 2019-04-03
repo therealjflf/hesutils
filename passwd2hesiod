@@ -34,18 +34,26 @@ set -e -o pipefail
 function print_help {
 
     echo "
-Usage:  $(basename "$0") [options]
+Usage:  $(basename "$0") -y|-n [options]
 
 Options:
 
   -h                display this help message and exit
   -v                run in verbose mode
+  -y                run: export passwd and group information to Hesiod
   -n                dry run: don't modify files, print to the standard output
   -c <filename>     use an alternative configuration file
   -p <filename>     use an alternative passwd file
   -g <filename>     use an alternative group file
 "
 }
+
+
+# Without any argument, print the help and exit
+if ! (( $# )) ; then
+    print_help
+    exit
+fi
 
 
 
@@ -101,11 +109,11 @@ HESGROUPFILE="${HESGROUPFILE:-/etc/group}"
 # Internal variables
 # ------------------------------------------------------------------------------
 
-libfiles=( lib_check_cfg_file
+libfiles=( lib_utils
+           lib_check_cfg_file
            lib_gen_bind
            lib_gen_dnsmasq
-           lib_gen_unbound
-           lib_utils )
+           lib_gen_unbound )
 
 for i in ${libfiles[@]} ; do
     source "${HESLIBPREFIX}/${i}"
@@ -113,7 +121,7 @@ done
 
 
 # As we can't query /etc/passwd and /etc/group like a database, we'll need a
-# bunch of tables to contain the lookups that we do.
+# bunch of tables to help the lookups that we'll do later.
 
 declare -a uid2user         # index: UID
 declare -A hesusers         # index: user name
@@ -126,6 +134,7 @@ declare -A hesgrplists      # index: user name
 # We need a temporary directory
 tmpdir=$(mktemp -d --tmpdir hesutils.XXXX) || exit 1
 
+declare -i run=0
 declare -i verbose=0
 declare -i dryrun=0
 
@@ -135,7 +144,7 @@ declare -i dryrun=0
 # ------------------------------------------------------------------------------
 
 OPTIND=1
-optstring=":hvnc:p:g:"
+optstring=":hvync:p:g:"
 
 while getopts $optstring name ; do
     case $name in
@@ -144,7 +153,10 @@ while getopts $optstring name ; do
             ;;
         v)  verbose=1
             ;;
+        y)  run=1
+            ;;
         n)  dryrun=1
+            run=1
             ;;
         c)  HESCFGFILE="$OPTARG"
             ;;
@@ -165,6 +177,12 @@ done
 # Drop all processed options and leave only the non-option parameters.
 # We don't actually need this right now, but we may some day!
 shift "$(( OPTIND - 1 ))"
+
+# Did the user ask us to do anything?
+if ! (( run )) ; then
+    echo "WARNING: Neither run (-y) or dry run (-n) requested, exiting." >&2
+    exit
+fi
 
 
 
@@ -310,9 +328,17 @@ done < "$HESGROUPFILE"
 # Generate the configuration files
 # ------------------------------------------------------------------------------
 
-(( GENDNSMASQ )) && { gen_dnsmasq ; (( RESTARTDNS )) && restart_dnsmasq ; }
-(( GENUNBOUND )) && { gen_unbound ; (( RESTARTDNS )) && restart_unbound ; }
-(( GENBIND ))    && { gen_bind    ; (( RESTARTDNS )) && restart_bind ; }
+# Generate and install the configuration files
+(( GENDNSMASQ )) && gen_dnsmasq
+(( GENUNBOUND )) && gen_unbound
+(( GENBIND ))    && gen_bind
+
+# Restart the servers if required
+if ! (( dryrun )) && (( RESTARTDNS )) ; then
+    (( GENDNSMASQ )) && restart_dnsmasq
+    (( GENUNBOUND )) && restart_unbound
+    (( GENBIND ))    && restart_bind
+fi
 
 # And we're done!
 
