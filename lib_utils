@@ -12,12 +12,11 @@
 # - local encoding --> ASCII
 # - wrap it at the 255-byte mark
 # - add backslash before any double-quote
-# 
-# Prints one or more line of sanitized text to stdout.
 #
-# $1    name of the variable containing the string
+# Reads the data on stdin
+# Prints one or more line of sanitized text to stdout.
 
 function prepare_TXT_string {
-    (( $# )) && echo -n ${!1} | iconv -t ascii//translit | fold -w 255 | sed 's/"/\\"/g'
+    iconv -t ascii//translit | fold -w 255 | sed 's/"/\\"/g'
 }
 
