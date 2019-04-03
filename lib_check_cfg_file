@@ -119,10 +119,10 @@ function check_cfg_file {
 
 
     # Check the binary options that default to 0
-    sanitize_binary_params 0 FILSYS GEN{BIND,UNBOUND}
+    sanitize_binary_params 0 FULLMEMBERLIST FILSYS GEN{BIND,UNBOUND}
 
     # Check the binary options that default to 1
-    sanitize_binary_params 1 GENDNSMASQ RESTARTDNS BLOCK{UPSTREAM,ATHENA}
+    sanitize_binary_params 1 TRIMGECOS GENDNSMASQ RESTARTDNS BLOCK{UPSTREAM,ATHENA}
 
 
     # Check the various paths
