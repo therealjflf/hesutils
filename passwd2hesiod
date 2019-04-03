@@ -252,8 +252,8 @@ while IFS=: read -a passwd ; do
     # start with cleaning up
     # we need to pretend the account is disabled. It's complicated.
     passwd[1]="*"
-    # clear the GECOS field, to shorten the TXT records and avoid spaces
-    passwd[4]=
+    # do we need to trim the GECOS field?
+    (( TRIMGECOS )) && passwd[4]=
 
     # some distros don't add a given user to its own group in /etc/passwd...
     # (I'm looking at you Debian and derivatives!)
@@ -311,9 +311,12 @@ while IFS=: read -a group ; do
     done < <(echo "${group[3]},")
     # without the comma above ^ the read misses the last member...
 
-    # change the membership list to keep only Hesiod members
-    #group[3]="${hesmembers%,}"
-    group[3]=
+    # do we include the full member list?
+    if (( FULLMEMBERLIST )) ; then
+        group[3]="${hesmembers%,}"
+    else
+        group[3]=
+    fi
 
     # and finally, store that group's data
     gid2group[${group[2]}]=${group[0]}
