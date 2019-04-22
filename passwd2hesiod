@@ -45,6 +45,9 @@ Options:
   -c <filename>     use an alternative configuration file
   -p <filename>     use an alternative passwd file
   -g <filename>     use an alternative group file
+
+By default this script does nothing. It requires either '-n' or '-y' to run.
+Without any parameter this help message is displayed.
 "
 }
 
@@ -142,8 +145,8 @@ shift "$(( OPTIND - 1 ))"
 
 # Did the user ask us to do anything?
 if ! (( run )) ; then
-    echo "WARNING: Neither run (-y) or dry run (-n) requested, exiting." >&2
-    exit
+    echo "ERROR: Neither run (-y) or dry run (-n) requested, exiting." >&2
+    exit 1
 fi
 
 
