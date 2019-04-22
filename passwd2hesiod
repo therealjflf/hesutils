@@ -71,53 +71,15 @@ trap victor EXIT ERR
 
 
 
-# Variables that can be overriden via the environment
-# ------------------------------------------------------------------------------
-
-# We need to know where we are first
-# The PATH hack is needed to work correctly with "bash -x script"
-fullpath="$(dirname "$(readlink -f "$(PATH=${PATH}:. which "$0")")")"
-
-if [[ "$fullpath" ]] ; then
-    prefix="${fullpath%/bin*}"
-else
-    # we should always be able to detect our prefix
-    # --> this codepath should never be taken!
-    echo "WARNING: Could not detect the installation prefix, using default: /usr" >&2
-    prefix="/usr"
-fi
-
-
-HESPREFIX="${HESPREFIX:-${prefix}}"
-HESLIBPREFIX="${HESLIBPREFIX:-${HESPREFIX}/share/hesutils}"
-
-if ! [[ -d "$HESLIBPREFIX" ]] ; then
-    echo "ERROR: The HESLIBPREFIX directory doesn't exist: $HESLIBPREFIX
-       See the Hesutils documentation for more details." >&2
-    exit 1
-fi
-
-
-# Those can be defined via the command line too, which has priority
-# They will be checked after the parameter parsing
-HESCFGFILE="${HESCFGFILE:-/etc/hesutils.conf}"
-HESPASSWDFILE="${HESPASSWDFILE:-/etc/passwd}"
-HESGROUPFILE="${HESGROUPFILE:-/etc/group}"
-
-
-
 # Internal variables
 # ------------------------------------------------------------------------------
 
+# The list of library files that we'll load later
 libfiles=( lib_utils
            lib_check_cfg_file
            lib_gen_bind
            lib_gen_dnsmasq
            lib_gen_unbound )
-
-for i in ${libfiles[@]} ; do
-    source "${HESLIBPREFIX}/${i}"
-done
 
 
 # As we can't query /etc/passwd and /etc/group like a database, we'll need a
@@ -186,8 +148,43 @@ fi
 
 
 
-# Check whether the various files exist
+# Check whether the various directories and files exist
 # ------------------------------------------------------------------------------
+
+# We need to know where we are first
+# The PATH hack is needed to work correctly with "bash -x script"
+fullpath="$(dirname "$(readlink -f "$(PATH=${PATH}:. which "$0")")")"
+
+if [[ "$fullpath" ]] ; then
+    prefix="${fullpath%/bin*}"
+else
+    # we should always be able to detect our prefix
+    # --> this codepath should never be taken!
+    echo "WARNING: Could not detect the installation prefix, using default: /usr" >&2
+    prefix="/usr"
+fi
+
+
+HESPREFIX="${HESPREFIX:-${prefix}}"
+HESLIBPREFIX="${HESLIBPREFIX:-${HESPREFIX}/share/hesutils}"
+
+if ! [[ -d "$HESLIBPREFIX" ]] ; then
+    echo "ERROR: The HESLIBPREFIX directory doesn't exist: $HESLIBPREFIX
+       See the Hesutils documentation for more details." >&2
+    exit 1
+fi
+
+
+# Now that the prefix is known, load the library files
+for i in ${libfiles[@]} ; do
+    source "${HESLIBPREFIX}/${i}"
+done
+
+
+# Those can be defined via the command line too, which has priority
+HESCFGFILE="${HESCFGFILE:-/etc/hesutils.conf}"
+HESPASSWDFILE="${HESPASSWDFILE:-/etc/passwd}"
+HESGROUPFILE="${HESGROUPFILE:-/etc/group}"
 
 for file in HES{CFG,PASSWD,GROUP}FILE ; do
     if ! [ -r "${!file}" ] ; then
