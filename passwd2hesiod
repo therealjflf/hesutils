@@ -20,12 +20,6 @@
 # Safety first
 set -e -o pipefail
 
-# Check for root
-#if (( UID != 0 )) ; then
-#    echo "ERROR: This command must be run as root." >&2
-#    exit 1
-#fi
-
 
 
 # The mandatory help message
@@ -119,9 +113,10 @@ while getopts $optstring name ; do
         v)  verbose=1
             ;;
         y)  run=1
+            dryrun=0
             ;;
         n)  dryrun=1
-            run=1
+            run=0
             ;;
         c)  HESCFGFILE="$OPTARG"
             ;;
@@ -143,9 +138,17 @@ done
 # We don't actually need this right now, but we may some day!
 shift "$(( OPTIND - 1 ))"
 
+
 # Did the user ask us to do anything?
-if ! (( run )) ; then
-    echo "ERROR: Neither run (-y) or dry run (-n) requested, exiting." >&2
+if ! (( run + dryrun )) ; then
+    echo "ERROR: Neither run (-y) or dry run (-n) was requested, exiting." >&2
+    exit 1
+fi
+
+
+# Root is required on a real run, is the user root?
+if (( run )) && (( UID )) ; then
+    echo "ERROR: This command must be run as root with the '-y' option, exiting." >&2
     exit 1
 fi
 
