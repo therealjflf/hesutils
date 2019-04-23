@@ -20,3 +20,57 @@ function prepare_TXT_string {
     iconv -t ascii//translit | fold -w 255 | sed 's/"/\\"/g'
 }
 
+
+
+# File management utilities
+# ------------------------------------------------------------------------------
+
+# Install a new file in its final location.
+# And before doing that, try to backup the file and keep a few old copies around
+#
+# $1    file to be installed
+# $2    full installation path
+
+function install_file {
+
+    # that shoudn't happen at all
+    (( $# )) || return 1
+
+    # that shouldn't happen either
+    if ! [[ -r "$1" ]] ; then
+        echo "WARNING: Installation source file not readable: $1" >&2
+        return 1
+    fi
+
+    # that may happen, but we won't create the directory for the user
+    if ! [[ -d "$(dirname "$2")" ]] ; then
+        echo "WARNING: Installation target directory doesn't exist: $1" >&2
+        return 1
+    fi
+
+    filname="hesiod_$(basename "$2")"
+
+
+    # backup the target file first, if it exists
+    if [[ -r "$2" ]] ; then
+
+        (( verbose )) && echo "Backing up the previous config file"
+
+        if which savelog >/dev/null 2>&1 && pushd /var/backups >/dev/null 2>&1 ; then
+            # Debian-style backups
+            cp -p "$2" "$filname"
+            savelog -c 7 -n -d "$filname" >/dev/null
+            popd >/dev/null 2>&1
+
+        elif which install >/dev/null 2>&1 && pushd /var/lib/hesutils >/dev/null 2>&1 ; then
+            # generic backups
+            install -C --backup=simple "$filname"
+            popd >/dev/null 2>&1
+        fi
+    fi
+
+
+    (( verbose)) && echo "Installing the new config file: $2"
+    install -C -m 644 "$1" "$2"
+}
+

@@ -334,17 +334,10 @@ done < "$HESGROUPFILE"
 # Generate the configuration files
 # ------------------------------------------------------------------------------
 
-# Generate and install the configuration files
-(( GENDNSMASQ )) && gen_dnsmasq
-(( GENUNBOUND )) && gen_unbound
-(( GENBIND ))    && gen_bind
-
-# Restart the servers if required
-if ! (( dryrun )) && (( RESTARTDNS )) ; then
-    (( GENDNSMASQ )) && restart_dnsmasq
-    (( GENUNBOUND )) && restart_unbound
-    (( GENBIND ))    && restart_bind
-fi
+# Generate and install the configuration files, and restart the servers if OK
+(( GENDNSMASQ )) && gen_dnsmasq && restart_dnsmasq
+(( GENUNBOUND )) && gen_unbound && restart_unbound
+(( GENBIND ))    && gen_bind    && restart_bind
 
 # And we're done!
 
