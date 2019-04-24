@@ -238,20 +238,20 @@ check_cfg_file      # exits in case of errors, checks and assigns default values
 
 while IFS=: read -a passwd ; do
 
-    # only deal with Hesiod users
-    if (( UIDMIN <= ${passwd[2]} && ${passwd[2]} <= UIDMAX )) ; then
-        (( verbose )) && echo -n "."
-    else
+    if (( ${passwd[2]} < UIDMIN || UIDMAX < ${passwd[2]} )) ; then
+        # user out of Hesiod range, nothing to do
         (( verbose )) && echo -n "x"
         continue
+    elif (( ${passwd[3]} < GIDMIN || GIDMAX < ${passwd[3]} )) ; then
+        # user in in the Hesiod range, but the primary group isn't
+        (( verbose )) && echo "!"
+        echo "WARNING: The primary group for user ${passwd[0]} isn't in the GIDMIN-GIDMAX range: ${passwd[3]}" >&2
+        continue
+    else
+        # good Hesiod user
+        (( verbose )) && echo -n "."
     fi
 
-    # and Hesiod user whose primary group is a Hesiod group too
-    if ! (( GIDMIN <= ${passwd[3]} && ${passwd[3]} <= GIDMAX )) ; then
-        echo -e "\nERROR: The primary GID for user ${passwd[0]} isn't in the GIDMIN-GIDMAX range: ${passwd[3]}" >&2
-        exit 1
-    fi
-    
     # start with cleaning up
     # we need to pretend the account is disabled. It's complicated.
     passwd[1]="*"
