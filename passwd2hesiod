@@ -270,7 +270,7 @@ while IFS=: read -a passwd ; do
     primarygid[${passwd[0]}]=${passwd[3]}
     hesusers[${passwd[0]}]="$(IFS=: ; echo "${passwd[*]}")"
 
-done < "$HESPASSWDFILE"
+done < <(awk '!/^ *#/ && NF' "$HESPASSWDFILE")
 
 (( verbose )) && echo -e "\n  --> ${#hesusers[@]} Hesiod users"
 
@@ -325,7 +325,7 @@ while IFS=: read -a group ; do
     gid2group[${group[2]}]=${group[0]}
     hesgroups[${group[0]}]="$(IFS=: ; echo "${group[*]}")"
 
-done < "$HESGROUPFILE"
+done < <(awk '!/^ *#/ && NF' "$HESGROUPFILE")
 
 (( verbose )) && echo -e "\n  --> ${#hesgroups[@]} Hesiod groups"
 
