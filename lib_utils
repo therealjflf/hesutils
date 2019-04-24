@@ -9,15 +9,17 @@
 # ------------------------------------------------------------------------------
 
 # Prepare (aka. sanitize) a string that will go into a TXT record:
-# - local encoding --> ASCII
-# - wrap it at the 255-byte mark
-# - add backslash before any double-quote
+# - fold it at the 255-byte mark
+# - add backslashes before double-quotes
+#
+# Note: a multi-byte UTF-8 character might get cut in the middle, but it should
+#       be reassembled correctly on the client.
 #
 # Reads the data on stdin
 # Prints one or more line of sanitized text to stdout.
 
 function prepare_TXT_string {
-    iconv -t ascii//translit | fold -w 255 | sed 's/"/\\"/g'
+    fold -w 255 | sed 's/"/\\"/g'
 }
 
 
