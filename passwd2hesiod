@@ -305,7 +305,7 @@ while IFS=: read -a group ; do
     while read -d, member ; do
         # only if we know the user already, and if it's not their primary group
         # (as we added that one first)
-        if [[ " $member " =~ " ${!hesusers[@]} " ]] ; then
+        if [[ " ${!hesusers[@]} " =~ " $member " ]] ; then
             hesmembers+="${member},"
             if [[ ${group[2]} != ${primarygid[$member]} ]] ; then
                 hesgrplists[${member}]+=":${group[2]}"
