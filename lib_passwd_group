@@ -47,13 +47,15 @@ function parse_passwd {
 
         # some distros don't add a given user to its own group in /etc/passwd...
         # (I'm looking at you Debian and derivatives!)
-        hesgrplists[${passwd[0]}]="${passwd[3]}"
+        # We need to add that information in 2 different places.
+        grplists[${passwd[0]}]=${passwd[3]}
+        groupmembers[${passwd[3]}]+="${passwd[0]},"
 
         # do we need to modify the exported home directory?
         [[ "$HOMEDIRSED" ]] && passwd[5]="$(echo "${passwd[5]}" | sed $HOMEDIRSED)"
 
         # and finally, store that user's data
-        uid2user[${passwd[2]}]=${passwd[0]}
+        uid2user[${passwd[2]}]="${passwd[0]}"
         primarygid[${passwd[0]}]=${passwd[3]}
         hesusers[${passwd[0]}]="$(IFS=: ; echo "${passwd[*]}")"
 
@@ -82,8 +84,6 @@ function parse_group {
 
     while IFS=: read -a group ; do
 
-        local hesmembers=""
-
         # only deal with Hesiod groups
         if (( GIDMIN <= ${group[2]} && ${group[2]} <= GIDMAX )) ; then
             (( verbose )) && echo -n "."
@@ -92,16 +92,16 @@ function parse_group {
             continue
         fi
 
-        # check the membership of the group, and add that group to the grplist of
-        # the Hesiod users that we know of already
+        # check the user list of the group, and add that group GID to the grplist
+        # of the Hesiod users that we know of already
 
         while read -d, member ; do
             # only if we know the user already, and if it's not their primary group
-            # (as we added that one first)
+            # (as we added that while parsing the passwd file)
             if [[ " ${!hesusers[@]} " =~ " $member " ]] ; then
-                hesmembers+="${member},"
                 if [[ ${group[2]} != ${primarygid[$member]} ]] ; then
-                    hesgrplists[${member}]+=":${group[2]}"
+                    grplists[${member}]+=":${group[2]}"
+                    groupmembers[${group[2]}]+="${member},"
                 fi
             fi
         done < <(echo "${group[3]},")
@@ -109,7 +109,7 @@ function parse_group {
 
         # do we include the full member list?
         if (( FULLMEMBERLIST )) ; then
-            group[3]="${hesmembers%,}"
+            group[3]="${groupmembers[${group[2]}]%,}"
         else
             group[3]=
         fi
