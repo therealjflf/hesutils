@@ -74,6 +74,7 @@ trap victor EXIT ERR
 # The list of library files that we'll load later
 libfiles=( lib_utils
            lib_check_cfg_file
+           lib_passwd_group
            lib_gen_bind
            lib_gen_dnsmasq
            lib_gen_unbound )
@@ -222,112 +223,11 @@ check_cfg_file      # exits in case of errors, checks and assigns default values
 
 
 
-# Parse /etc/passwd to obtain the relevant information
+# Parse the various files to fill in the data arrays
 # ------------------------------------------------------------------------------
 
-# /etc/passwd fields:
-#  0  user name
-#  1  password
-#  2  UID
-#  3  primary GID
-#  4  GECOS
-#  5  home directory
-#  6  shell
-
-(( verbose )) && echo -en "\nProcessing the passwd file entries: "
-
-while IFS=: read -a passwd ; do
-
-    if (( ${passwd[2]} < UIDMIN || UIDMAX < ${passwd[2]} )) ; then
-        # user out of Hesiod range, nothing to do
-        (( verbose )) && echo -n "x"
-        continue
-    elif (( ${passwd[3]} < GIDMIN || GIDMAX < ${passwd[3]} )) ; then
-        # user in in the Hesiod range, but the primary group isn't
-        (( verbose )) && echo "!"
-        echo "WARNING: The primary group for user ${passwd[0]} isn't in the GIDMIN-GIDMAX range: ${passwd[3]}" >&2
-        continue
-    else
-        # good Hesiod user
-        (( verbose )) && echo -n "."
-    fi
-
-    # start with cleaning up
-    # we need to pretend the account is disabled. It's complicated.
-    passwd[1]="*"
-    # do we need to trim the GECOS field?
-    (( TRIMGECOS )) && passwd[4]=
-
-    # some distros don't add a given user to its own group in /etc/passwd...
-    # (I'm looking at you Debian and derivatives!)
-    hesgrplists[${passwd[0]}]="${passwd[3]}"
-
-    # do we need to modify the exported home directory?
-    [[ "$HOMEDIRSED" ]] && passwd[5]="$(echo "${passwd[5]}" | sed $HOMEDIRSED)"
-
-    # and finally, store that user's data
-    uid2user[${passwd[2]}]=${passwd[0]}
-    primarygid[${passwd[0]}]=${passwd[3]}
-    hesusers[${passwd[0]}]="$(IFS=: ; echo "${passwd[*]}")"
-
-done < <(awk '!/^ *#/ && NF' "$HESPASSWDFILE")
-
-(( verbose )) && echo -e "\n  --> ${#hesusers[@]} Hesiod users"
-
-
-
-# Parse /etc/group to obtain the relevant information
-# ------------------------------------------------------------------------------
-
-# /etc/group fields:
-#  0  group name
-#  1  group password (yup, that exists apparently)
-#  2  GID
-#  3  user list, comma-separated
-
-(( verbose )) && echo -n "Processing the group file entries: "
-
-while IFS=: read -a group ; do
-
-    hesmembers=""
-
-    # only deal with Hesiod groups
-    if (( GIDMIN <= ${group[2]} && ${group[2]} <= GIDMAX )) ; then
-        (( verbose )) && echo -n "."
-    else
-        (( verbose )) && echo -n "x"
-        continue
-    fi
-
-    # check the membership of the group, and add that group to the grplist of
-    # the Hesiod users that we know of already
-
-    while read -d, member ; do
-        # only if we know the user already, and if it's not their primary group
-        # (as we added that one first)
-        if [[ " ${!hesusers[@]} " =~ " $member " ]] ; then
-            hesmembers+="${member},"
-            if [[ ${group[2]} != ${primarygid[$member]} ]] ; then
-                hesgrplists[${member}]+=":${group[2]}"
-            fi
-        fi
-    done < <(echo "${group[3]},")
-    # without the comma above ^ the read misses the last member...
-
-    # do we include the full member list?
-    if (( FULLMEMBERLIST )) ; then
-        group[3]="${hesmembers%,}"
-    else
-        group[3]=
-    fi
-
-    # and finally, store that group's data
-    gid2group[${group[2]}]=${group[0]}
-    hesgroups[${group[0]}]="$(IFS=: ; echo "${group[*]}")"
-
-done < <(awk '!/^ *#/ && NF' "$HESGROUPFILE")
-
-(( verbose )) && echo -e "\n  --> ${#hesgroups[@]} Hesiod groups"
+parse_passwd
+parse_group
 
 
 
