@@ -83,12 +83,13 @@ libfiles=( lib_utils
 # As we can't query /etc/passwd and /etc/group like a database, we'll need a
 # bunch of tables to help the lookups that we'll do later.
 
-declare -a uid2user         # index: UID
-declare -A hesusers         # index: user name
-declare -A primarygid       # index: user name
-declare -a gid2group        # index: GID
-declare -A hesgroups        # index: group name
-declare -A hesgrplists      # index: user name
+declare -a uid2user         # index: UID        ->  user name
+declare -A hesusers         # index: user name  ->  /etc/passwd string
+declare -A primarygid       # index: user name  ->  primary GID
+declare -A grplists         # index: user name  ->  GIDs the user belongs to
+declare -a gid2group        # index: GID        ->  group name
+declare -a groupmembers     # index: GID        ->  user members of that group
+declare -A hesgroups        # index: group name ->  /etc/group string
 
 
 # We need a temporary directory
