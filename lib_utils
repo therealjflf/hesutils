@@ -8,19 +8,14 @@
 # DNS config generation utilities
 # ------------------------------------------------------------------------------
 
-# Prepare (aka. sanitize) a string that will go into a TXT record:
-# - fold it at the 255-byte mark
-# - add backslashes before double-quotes
+# To prepare a string that will go into a TXT record:
+# - sanitize it by adding backslashes before double-quotes
+# - split it into 255-byte chunks
 #
-# Note: a multi-byte UTF-8 character might get cut in the middle, but it should
-#       be reassembled correctly on the client.
-#
-# Reads the data on stdin
-# Prints one or more line of sanitized text to stdout.
+# dnsmasq does the splitting itself internally.
 
-function prepare_TXT_string {
-    fold -w 255 | sed 's/"/\\"/g'
-}
+function sanitize_TXT { sed 's/"/\\\\"/g' ; }
+function fold_TXT     { fold -w 255 ; }
 
 
 
