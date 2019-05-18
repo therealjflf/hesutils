@@ -119,17 +119,17 @@ function check_cfg_file {
         exit 1
     fi
 
-    if [[ "$FSCOMMAND" && ! type "$FSMAPFILE" &> /dev/null ]] ; then
+    if [[ "$FSCOMMAND" ]] && ! type "$FSMAPFILE" &> /dev/null ; then
         echo "ERROR: The FSCOMMAND doesn't exist, is not executable or is not in the PATH: $FSCOMMAND" >&2
         exit 1
     fi
 
 
     # Check the binary options that default to 0
-    sanitize_binary_params 0 FULLMEMBERLIST FILSYS GEN{BIND,UNBOUND}
+    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSCFG GENBIND GENUNBOUND
 
     # Check the binary options that default to 1
-    sanitize_binary_params 1 TRIMGECOS GENDNSMASQ RESTARTDNS BLOCK{UPSTREAM,ATHENA}
+    sanitize_binary_params 1 TRIMGECOS GENDNSMASQ RESTARTDNS BLOCKUPSTREAM BLOCKATHENA
 
 
     # Check the various paths
