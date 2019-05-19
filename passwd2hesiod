@@ -74,6 +74,7 @@ trap victor EXIT ERR
 # The list of library files that we'll load later
 libfiles=( lib_utils
            lib_check_cfg_file
+           lib_filsys
            lib_passwd_group
            lib_gen_bind
            lib_gen_dnsmasq
@@ -90,6 +91,7 @@ declare -A grplists         # index: user name  ->  GIDs the user belongs to
 declare -a gid2group        # index: GID        ->  group name
 declare -a groupmembers     # index: GID        ->  user members of that group
 declare -A hesgroups        # index: group name ->  /etc/group string
+declare -A filsys           # index: user name  ->  filsys record(s)
 
 
 # We need a temporary directory
