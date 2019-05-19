@@ -30,7 +30,7 @@ function parse_passwd {
             (( verbose )) && echo -n "x"
             continue
         elif (( ${passwd[3]} < GIDMIN || GIDMAX < ${passwd[3]} )) ; then
-            # user in in the Hesiod range, but the primary group isn't
+            # user is in the Hesiod range, but the primary group isn't
             (( verbose )) && echo -n "!"
             delayedwarnings+="WARNING: Skipping user \"${passwd[0]}\": GID ${passwd[3]} not in range [$GIDMIN-$GIDMAX]\n"
             continue
@@ -51,15 +51,17 @@ function parse_passwd {
         grplists[${passwd[0]}]=${passwd[3]}
         groupmembers[${passwd[3]}]+="${passwd[0]},"
 
-        # do we need to modify the exported home directory?
-        [[ "$HOMEDIRSED" ]] && passwd[5]="$(echo "${passwd[5]}" | sed $HOMEDIRSED)"
+        # the last step is to transform the passwd path into the mount path.
+        # this is done inside the FILSYS functions (whether or not FILSYS
+        # records are requested), so it's a 2-in-1 deal.
+        filsys_voodoo
 
         # and finally, store that user's data
         uid2user[${passwd[2]}]="${passwd[0]}"
         primarygid[${passwd[0]}]=${passwd[3]}
         hesusers[${passwd[0]}]="$(IFS=: ; echo "${passwd[*]}")"
 
-    done < <(awk '!/^ *#/ && NF' "$HESPASSWDFILE")
+    done < <(awk 'NF && !/^[:space:]*#/' "$HESPASSWDFILE")
 
     (( verbose )) && echo
     echo -en "$delayedwarnings" >&2
@@ -118,7 +120,7 @@ function parse_group {
         gid2group[${group[2]}]=${group[0]}
         hesgroups[${group[0]}]="$(IFS=: ; echo "${group[*]}")"
 
-    done < <(awk '!/^ *#/ && NF' "$HESGROUPFILE")
+    done < <(awk 'NF && !/^[:space:]*#/' "$HESGROUPFILE")
 
     (( verbose )) && echo -e "\n  --> ${#hesgroups[@]} Hesiod groups" || true
 }
