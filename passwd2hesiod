@@ -20,6 +20,8 @@
 # Safety first
 set -e -o pipefail
 
+# We deal with "*" and we don't want any expansion
+set -o noglob
 
 
 # The mandatory help message
