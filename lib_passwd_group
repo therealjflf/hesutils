@@ -39,22 +39,24 @@ function parse_passwd {
             (( verbose )) && echo -n "."
         fi
 
-        # start with cleaning up
-        # we need to pretend the account is disabled. It's complicated.
-        passwd[1]="*"
-        # do we need to trim the GECOS field?
-        (( TRIMGECOS )) && passwd[4]=
-
-        # some distros don't add a given user to its own group in /etc/passwd...
+        # Some distros don't add a given user to its own group in /etc/passwd...
         # (I'm looking at you Debian and derivatives!)
-        # We need to add that information in 2 different places.
+        # We need to add that information in 2 different places:
+        # 1. the list of groups a user is a member of
         grplists[${passwd[0]}]=${passwd[3]}
+        # 2. the list of users that are member of a given group
         groupmembers[${passwd[3]}]+="${passwd[0]},"
 
-        # the last step is to transform the passwd path into the mount path.
-        # this is done inside the FILSYS functions (whether or not FILSYS
-        # records are requested), so it's a 2-in-1 deal.
+        # Then we need to transform the passwd path into the mount path.
+        # This is done inside the FILSYS functions (whether or not FILSYS
+        # records are requested), so we do both at the same time.
         filsys_voodoo
+
+        # If needed, do some cleanup.
+        # We need to pretend the account is disabled. It's complicated.
+        passwd[1]="*"
+        # trim the GECOS field if required
+        (( TRIMGECOS )) && passwd[4]=
 
         # and finally, store that user's data
         uid2user[${passwd[2]}]="${passwd[0]}"
