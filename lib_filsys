@@ -1,0 +1,157 @@
+#!/bin/bash
+
+# ==============================================================================
+# Hesutils library: FILSYS record generation and homedir path transformation
+# ==============================================================================
+
+
+# Path 1: get FILSYS info from the FSCOMMAND
+# ------------------------------------------------------------------------------
+
+function path1 {
+
+    while read -a record ; do
+
+        # we can't tell the difference between a user-specific record and a
+        # generic one, so treat all records as user-specific and grab the mount
+        # path.
+        # if there is more than 1 record, last one wins
+        mountpath="${record[-1]}"
+
+        # and copy the record over into filsys
+        (( FILSYS )) && filsys[${passwd[0]}]+="${record[@]}\n"
+
+    done < <( "$FSCOMMAND" "${passwd[@]}" | awk 'NF && !/^[:space:]*#/' )
+}
+
+
+
+
+# Path 2.1: run sed commands and generate FILSYSCFG record
+# ------------------------------------------------------------------------------
+
+# passwd fields:
+#  0  user name
+#  1  password
+#  2  UID
+#  3  primary GID
+#  4  GECOS
+#  5  home directory
+#  6  shell
+
+function path21 {
+
+    local tmp
+
+    # first go through both sed commands
+    # the export path is only useful for FILSYS setups
+
+    if (( FILSYS )) && (( FILSYSCFG )) && [[ "$HOMESEDEXPORT" ]] ; then
+        if tmp="$( echo $exportpath | sed "$HOMESEDEXPORT" 2>/dev/null )" ; then
+            exportpath="$tmp"
+        else
+            delayedwarnings+="WARNING: HOMESEDEXPORT sed command failed for user \"${passwd[0]}\", passwd path \"${passwd[5]}\"\n"
+        fi
+    fi
+
+    if [[ "$HOMESEDMOUNT" ]] ; then
+        if tmp="$( echo $mountpath | sed "$HOMESEDMOUNT" 2>/dev/null )" ; then
+            mountpath="$tmp"
+        else
+            delayedwarnings+="WARNING: HOMESEDMOUNT sed command failed for user \"${passwd[0]}\", passwd path \"${passwd[5]}\"\n"
+        fi
+    fi
+
+    # if FILSYSCFG is set, generate one FILSYS record using the cfg info
+
+    if (( FILSYS )) && (( FILSYSCFG )) ; then
+        tmp="$FSTYPE $exportpath "
+        [[ "$FSTYPE" == "NFS" ]] && tmp+="$NFSSERVER "
+        tmp+="$FSMOUNTOPTS $mountpath"
+        filsys[${passwd[0]}]+="${tmp}\n"
+    fi
+}
+
+
+
+
+# Path 2.2: get FSMAPFILE mappings
+# ------------------------------------------------------------------------------
+
+# passwd fields:
+#  0  user name
+#  1  password
+#  2  UID
+#  3  primary GID
+#  4  GECOS
+#  5  home directory
+#  6  shell
+
+function path22 {
+
+    while read -a record ; do
+
+        # if we find the keyword "delete", scratch the existing FILSYS entries
+        if [[ "${record[1]}" == "delete" ]] ; then
+            filsys[${passwd[0]}]=""
+            continue
+        fi
+
+        # if we have a user-specific record, grab the mount path
+        # if there are more than 1 user-specific records, last one wins
+        if [[ "${record[0]}" == "${passwd[0]}" ]] ; then
+            mountpath="${record[-1]}"
+        fi
+
+        # and copy the record over into filsys
+        # first field (user name or "*") is skipped
+        (( FILSYS )) && filsys[${passwd[0]}]+="${record[@]:1}\n"
+
+    done < <( awk 'NF && !/^[:space:]*#/ && $1 ~ /^('${passwd[0]}'|*)$/' "$FSMAPFILE" )
+}
+
+
+
+
+# Top-level FILSYS voodoo function
+# ------------------------------------------------------------------------------
+
+# That function needs to be called even if the user didn't ask for FILSYS
+# records, as the code to do the homedir path is part of the FILSYS logic.
+#
+# The function manipulates variables in the environment:
+# passwd    /etc/passwd entries
+# filsys    user name  ->  filsys record(s)
+
+# passwd fields:
+#  0  user name
+#  1  password
+#  2  UID
+#  3  primary GID
+#  4  GECOS
+#  5  home directory
+#  6  shell
+
+function filsys_voodoo {
+
+    exportpath="${passwd[5]}"
+    mountpath="${passwd[5]}"
+    filsys[${passwd[0]}]=""
+
+    # path #1: external FSCOMMAND
+    # path #2.1: sed modifications
+    # path #2.2: FSMAPFILE mappings
+
+    if [[ "$FSCOMMAND" ]] ; then
+        path1
+    else
+        path21
+        if [[ "$FSMAPFILE" ]] ; then
+            path22
+        fi
+    fi
+
+    # finally update the home directory to use the mount path
+    passwd[5]="$mountpath"
+}
+
