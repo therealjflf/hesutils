@@ -13,8 +13,9 @@ function path1 {
     while read -a record ; do
 
         # we can't tell the difference between a user-specific record and a
-        # generic one, so treat all records as user-specific and grab the mount
-        # path.
+        # generic one, so treat all records as user-specific.
+
+        # grab the mount path
         # if there is more than 1 record, last one wins
         mountpath="${record[-1]}"
 
@@ -44,15 +45,7 @@ function path21 {
     local tmp
 
     # first go through both sed commands
-    # the export path is only useful for FILSYS setups
-
-    if (( FILSYS )) && (( FILSYSCFG )) && [[ "$HOMESEDEXPORT" ]] ; then
-        if tmp="$( echo $exportpath | sed "$HOMESEDEXPORT" 2>/dev/null )" ; then
-            exportpath="$tmp"
-        else
-            delayedwarnings+="WARNING: HOMESEDEXPORT sed command failed for user \"${passwd[0]}\", passwd path \"${passwd[5]}\"\n"
-        fi
-    fi
+    # the mount path is used both with and without FILSYS
 
     if [[ "$HOMESEDMOUNT" ]] ; then
         if tmp="$( echo $mountpath | sed "$HOMESEDMOUNT" 2>/dev/null )" ; then
@@ -62,9 +55,19 @@ function path21 {
         fi
     fi
 
-    # if FILSYSCFG is set, generate one FILSYS record using the cfg info
 
     if (( FILSYS )) && (( FILSYSCFG )) ; then
+
+        # the export path is only useful for FILSYS setups
+        if [[ "$HOMESEDEXPORT" ]] ; then
+            if tmp="$( echo $exportpath | sed "$HOMESEDEXPORT" 2>/dev/null )" ; then
+                exportpath="$tmp"
+            else
+                delayedwarnings+="WARNING: HOMESEDEXPORT sed command failed for user \"${passwd[0]}\", passwd path \"${passwd[5]}\"\n"
+            fi
+        fi
+
+        # generate one FILSYS record using the cfg info
         tmp="$FSTYPE $exportpath "
         [[ "$FSTYPE" == "NFS" ]] && tmp+="$NFSSERVER "
         tmp+="$FSMOUNTOPTS $mountpath"
