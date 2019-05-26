@@ -5,30 +5,7 @@
 # ==============================================================================
 
 
-# Path 1: get FILSYS info from the FSCOMMAND
-# ------------------------------------------------------------------------------
-
-function path1 {
-
-    while read -a record ; do
-
-        # we can't tell the difference between a user-specific record and a
-        # generic one, so treat all records as user-specific.
-
-        # grab the mount path
-        # if there is more than 1 record, last one wins
-        mountpath="${record[-1]}"
-
-        # and copy the record over into filsys
-        (( FILSYS )) && filsys[${passwd[0]}]+="${record[@]}\n"
-
-    done < <( "$FSCOMMAND" "${passwd[@]}" | awk 'NF && !/^[:space:]*#/' )
-}
-
-
-
-
-# Path 2.1: run sed commands and generate FILSYSCFG record
+# Run sed commands and generate FILSYSCFG record
 # ------------------------------------------------------------------------------
 
 # passwd fields:
@@ -40,7 +17,7 @@ function path1 {
 #  5  home directory
 #  6  shell
 
-function path21 {
+function sed_filsyscfg {
 
     local tmp
 
@@ -78,7 +55,7 @@ function path21 {
 
 
 
-# Path 2.2: get FSMAPFILE mappings
+# Parse external FILSYS records
 # ------------------------------------------------------------------------------
 
 # passwd fields:
@@ -90,9 +67,12 @@ function path21 {
 #  5  home directory
 #  6  shell
 
-function path22 {
+function parse_external_filsys {
 
     while read -a record ; do
+
+        # skip empty lines and comments
+        ( ! (( ${#record[@]} )) || [[ ${record[0]} =~ ^# ]] ) && continue
 
         # if we find the keyword "delete", scratch the existing FILSYS entries
         if [[ "${record[1]}" == "delete" ]] ; then
@@ -110,7 +90,7 @@ function path22 {
         # first field (user name or "*") is skipped
         (( FILSYS )) && filsys[${passwd[0]}]+="${record[@]:1}\n"
 
-    done < <( awk 'NF && !/^[:space:]*#/ && $1 ~ /^('${passwd[0]}'|*)$/' "$FSMAPFILE" )
+    done
 }
 
 
@@ -141,18 +121,16 @@ function filsys_voodoo {
     mountpath="${passwd[5]}"
     filsys[${passwd[0]}]=""
 
-    # path #1: external FSCOMMAND
-    # path #2.1: sed modifications
-    # path #2.2: FSMAPFILE mappings
 
-    if [[ "$FSCOMMAND" ]] ; then
-        path1
-    else
-        path21
-        if [[ "$FSMAPFILE" ]] ; then
-            path22
-        fi
-    fi
+    # first the sed command(s) and the corresponding FILSYS record
+    sed_filsyscfg
+
+    # then the contents of the FSMAPFILE
+    [[ "$FSMAPFILE" ]] && parse_external_filsys < "$FSMAPFILE"
+
+    # and finally the output of FSCOMMAND
+    [[ "$FSCOMMAND" ]] && parse_external_filsys < <( "$FSCOMMAND" "${passwd[@]}" )
+
 
     # finally update the home directory to use the mount path
     passwd[5]="$mountpath"
