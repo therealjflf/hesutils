@@ -2,7 +2,7 @@
 
 # ==============================================================================
 #
-# passwd2hesiod
+# hesgenerate
 #
 # ------------------------------------------------------------------------------
 #
@@ -44,14 +44,14 @@ Options:
 
 By default this script does nothing. It requires either '-n' or '-y' to run.
 Without any parameter this help message is displayed.
-"
+" >&2
 }
 
 
 # Without any argument, print the help and exit
 if ! (( $# )) ; then
     print_help
-    exit
+    exit 1
 fi
 
 
@@ -160,7 +160,7 @@ fi
 
 
 
-# Check whether the various directories and files exist
+# Check whether the various hesutils directories and files exist
 # ------------------------------------------------------------------------------
 
 # We need to know where we are first
