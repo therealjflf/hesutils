@@ -1,0 +1,176 @@
+#!/bin/bash
+
+# ==============================================================================
+#
+# hesadd
+#
+# ------------------------------------------------------------------------------
+#
+# Wrapper to useradd and groupadd that creates users and groups within the UID
+# and GID ranges defined in the hesutils.conf configuration file.
+# 
+# ==============================================================================
+
+
+
+# Boilerplate stuff
+# ------------------------------------------------------------------------------
+
+# Safety first
+set -e -o pipefail
+
+
+
+# The mandatory help message
+# ------------------------------------------------------------------------------
+
+function print_help {
+
+    echo "
+Usage:  hesadd <command> [options]
+
+Wrapper to useradd and groupadd that creates users and groups within the UID and
+GID ranges defined in the hesutils.conf configuration file.
+
+<command> is the name of the system command called to create the user or group.
+
+The wrapper itself takes no option. All [options] (including the names of users
+or groups to be created) are passed on unmodified as parameter to <command>.
+
+Commands:
+  useradd           call the useradd command to create a user
+  groupadd          call the groupadd command to create a group
+
+Aliases:
+  hesuseradd        hesadd useradd
+  hesgroupadd       hesadd groupadd
+" >&2
+}
+
+
+# Without any argument, print the help and exit
+if ! (( $# )) ; then
+    print_help
+    exit 1
+fi
+
+
+
+# Internal variables
+# ------------------------------------------------------------------------------
+
+# The list of library files that we'll load later
+libfiles=( lib_check_cfg_file )
+
+parsecmd=0
+cmd=""
+
+
+
+# Check if we've been called via one of the aliases
+# -----------------------------------------------------------------------
+
+case "$(basename "$0")" in
+    hesuseradd)     cmd=useradd ;;
+    hesgroupadd)    cmd=groupadd ;;
+    *)              parsecmd=1 ;;
+esac
+
+
+
+# Parse the command if needed
+# -----------------------------------------------------------------------
+
+if (( parsecmd )) ; then
+
+    case "$1" in
+        -h|--help)  
+            print_help
+            exit 0
+            ;;
+
+        useradd|groupadd)
+            cmd="$1"
+            ;;
+
+        *)  echo "ERROR: Unknown command: $1" >&2
+            print_help
+            exit 1
+    esac
+
+    # and get rid of that first parameter
+    shift
+fi
+
+
+# Is the user root?
+if (( UID )) ; then
+    echo "ERROR: This command must be run as root." >&2
+    exit 1
+fi
+
+
+
+# Check whether the various hesutils directories and files exist
+# ------------------------------------------------------------------------------
+
+# We need to know where we are first
+# The PATH hack is needed to work correctly with "bash -x script"
+fullpath="$(dirname "$(readlink -f "$(PATH=${PATH}:. which "$0")")")"
+
+if [[ "$fullpath" ]] ; then
+    prefix="${fullpath%/bin*}"
+else
+    # we should always be able to detect our prefix
+    # --> this codepath should never be taken!
+    echo "WARNING: Could not detect the installation prefix, using default: /usr" >&2
+    prefix="/usr"
+fi
+
+
+HESPREFIX="${HESPREFIX:-${prefix}}"
+HESLIBPREFIX="${HESLIBPREFIX:-${HESPREFIX}/share/hesutils}"
+
+if ! [[ -d "$HESLIBPREFIX" ]] ; then
+    echo "ERROR: The HESLIBPREFIX directory doesn't exist: $HESLIBPREFIX
+       See the Hesutils documentation for more details." >&2
+    exit 1
+fi
+
+
+# Now that the prefix is known, load the library files
+for i in ${libfiles[@]} ; do
+    source "${HESLIBPREFIX}/${i}"
+done
+
+
+# Those can be defined via the command line too, which has priority
+HESCFGFILE="${HESCFGFILE:-/etc/hesutils.conf}"
+
+if ! [ -r "$HESCFGFILE" ] ; then
+    echo "ERROR: The file doesn't exist or is not readable: HESCFGFILE=${HESCFGFILE}" >&2
+    exit 1
+fi
+
+
+
+# Load and check the configuration file
+# ------------------------------------------------------------------------------
+
+source "$HESCFGFILE"
+check_cfg_file      # exits in case of errors, checks and assigns default values
+
+
+
+# And finally call the various commands
+# ------------------------------------------------------------------------------
+
+case $cmd in
+
+    useradd)     useradd -K UID_MIN=$UIDMIN -K UID_MAX=$UIDMAX -K GID_MIN=$GIDMIN -K GID_MAX=$GIDMAX "$@" ;;
+    groupadd)    groupadd -K GID_MIN=$GIDMIN -K GID_MAX=$GIDMAX "$@" ;;
+
+    *)  echo "ERROR: How the h311 did we get here?!" >&2
+        exit 1
+esac
+
