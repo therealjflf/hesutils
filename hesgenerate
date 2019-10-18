@@ -63,6 +63,9 @@ function victor {
     # clean any existing redirection to a dns config output file
     { >&3; } 2>/dev/null && exec 3>&-
 
+    # terminate the SQLite coprocess
+    [[ "$sql3_PID" ]] && kill $sql_PID
+
     [[ -d "$tmpdir" ]] && rm -fr "$tmpdir"
 }
 
@@ -76,24 +79,10 @@ trap victor EXIT ERR
 # The list of library files that we'll load later
 libfiles=( lib_utils
            lib_check_cfg_file
-           lib_filsys
-           lib_passwd_group
+           lib_sqlite3
            lib_gen_bind
            lib_gen_dnsmasq
            lib_gen_unbound )
-
-
-# As we can't query /etc/passwd and /etc/group like a database, we'll need a
-# bunch of tables to help the lookups that we'll do later.
-
-declare -a uid2user         # index: UID        ->  user name
-declare -A hesusers         # index: user name  ->  /etc/passwd string
-declare -A primarygid       # index: user name  ->  primary GID
-declare -A grplists         # index: user name  ->  GIDs the user belongs to
-declare -a gid2group        # index: GID        ->  group name
-declare -a groupmembers     # index: GID        ->  user members of that group
-declare -A hesgroups        # index: group name ->  /etc/group string
-declare -A filsys           # index: user name  ->  filsys record(s)
 
 
 # We need a temporary directory
@@ -228,11 +217,11 @@ check_cfg_file      # exits in case of errors, checks and assigns default values
 
 
 
-# Parse the various files to fill in the data arrays
+# Get the db going
 # ------------------------------------------------------------------------------
 
-parse_passwd
-parse_group
+sql3_init
+sql3_load_files
 
 
 
