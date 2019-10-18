@@ -1,0 +1,124 @@
+#!/bin/bash
+
+# ==============================================================================
+# Hesutils library: SQLite functions
+# ==============================================================================
+
+
+# Flush the output of the SQLite coprocess
+# ------------------------------------------------------------------------------
+#
+# For call for which we don't want to keep the output, 
+
+function flush_sql_return {
+
+    while read -rt 0.1 -u $from_sql sql_return ; do
+        (( verbose )) && [[ "$sql_return" ]] && echo "sql output> " "$sql_return"
+    done
+}
+
+
+
+# Initialize the SQLite coprocess
+# ------------------------------------------------------------------------------
+#
+# Start the SQLite coprocess, and create the database schemas.
+# SQLite is running in memory only, we don't back the db with any file.
+
+function sql3_init {
+
+    (( verbose )) && echo -n "Starting the SQLite coprocess: "
+    coproc sql3 ( sqlite3 ) >/dev/null 2>&1
+    (( verbose )) && echo "PID $sql3_PID"
+
+    # use nicer names for the file descriptors
+    from_sql=${sql3[0]}     # data coming in from sqlite3
+    to_sql=${sql3[1]}       # data sent out to sqlite3
+
+    (( verbose )) && echo "Creating the SQL database schemas"
+
+    cat << EOF >&$to_sql
+        CREATE TABLE users (
+            uname   TEXT,
+            upwd    TEXT,
+            uid     INTEGER,
+            pgid    INTEGER,
+            gecos   TEXT,
+            home    TEXT,
+            shell   TEXT
+        );
+        CREATE VIRTUAL TABLE groups USING fts4 (
+            gname   TEXT,
+            gpwd    TEXT,
+            gid     INTEGER,
+            members TEXT
+        );
+EOF
+
+    flush_sql_return
+}
+
+
+
+# Load the passwd and group files into the database
+# ------------------------------------------------------------------------------
+
+function sql3_load_files {
+
+    (( $# )) || return -1
+
+    # we need to remove any comment / empty line / incomplete line first, as
+    # sqlite isn't very happy with those
+    awk -F: 'NF == 7 && !/^[:space:]*#/' "$HESPASSWDFILE" > "$tmpdir"/passwd
+    awk -F: 'NF == 4 && !/^[:space:]*#/' "$HESGROUPFILE" > "$tmpdir"/group
+
+    (( verbose )) && echo "Loading the passwd and group files into the database"
+
+    cat << EOF >&$to_sql
+        .mode csv
+        .separator ":"
+        .import "$tmpdir/passwd" users
+        .import "$tmpdir/group" groups
+EOF
+
+    flush_sql_return
+}
+
+
+
+# Remove all the DB entries that are out of range
+# ------------------------------------------------------------------------------
+
+function sql3_remove_non_hesiod {
+
+    (( verbose )) && echo "Discarding all users and groups that are not in Hesiod range"
+
+    # let's start by deleting all out-of-range users and groups
+    cat << EOF >&$to_sql
+        DELETE FROM users WHERE uid NOT BETWEEN $UIDMIN AND $UIDMAX ;
+        DELETE FROM groups WHERE gid NOT BETWEEN $GIDMIN AND $GIDMAX ;
+EOF
+
+    flush_sql_return
+
+    # That leaves the case of users that are in range, but whose primary GID
+    # isn't. Warn if we're in verbose mode, then delete.
+    if (( verbose )) ; then
+        echo "Users within the Hesiod range but whose primary group is not:"
+        cat << EOF >&$to_sql
+            .mode list
+            .separator ":"
+            SELECT * FROM users WHERE pgid NOT BETWEEN $GIDMIN AND $GIDMAX ;
+            SELECT count(*) FROM users WHERE pgid NOT BETWEEN $GIDMIN AND $GIDMAX ;
+EOF
+        flush_sql_return
+    fi
+
+    # and finally drop those specific users
+    cat << EOF >&$to_sql
+        DELETE FROM users WHERE pgid NOT BETWEEN $GIDMIN AND $GIDMAX ;
+EOF
+
+    flush_sql_return
+}
+
