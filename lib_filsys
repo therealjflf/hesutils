@@ -5,7 +5,7 @@
 # ==============================================================================
 
 
-# Run sed commands and generate FILSYSCFG record
+# Run sed commands on the paths
 # ------------------------------------------------------------------------------
 
 # passwd fields:
@@ -17,7 +17,7 @@
 #  5  home directory
 #  6  shell
 
-function sed_filsyscfg {
+function sed_paths {
 
     local tmp
 
@@ -32,23 +32,14 @@ function sed_filsyscfg {
         fi
     fi
 
+    # the export path is only useful for FILSYS setups
 
-    if (( FILSYS )) && (( FILSYSCFG )) ; then
-
-        # the export path is only useful for FILSYS setups
-        if [[ "$HOMESEDEXPORT" ]] ; then
-            if tmp="$( echo $exportpath | sed "$HOMESEDEXPORT" 2>/dev/null )" ; then
-                exportpath="$tmp"
-            else
-                delayedwarnings+="WARNING: HOMESEDEXPORT sed command failed for user \"${passwd[0]}\", passwd path \"${passwd[5]}\"\n"
-            fi
+    if (( FILSYS )) && (( FILSYSAUTO )) && [[ "$HOMESEDEXPORT" ]] ; then
+        if tmp="$( echo $exportpath | sed "$HOMESEDEXPORT" 2>/dev/null )" ; then
+            exportpath="$tmp"
+        else
+            delayedwarnings+="WARNING: HOMESEDEXPORT sed command failed for user \"${passwd[0]}\", passwd path \"${passwd[5]}\"\n"
         fi
-
-        # generate one FILSYS record using the cfg info
-        tmp="$FSTYPE $exportpath "
-        [[ "$FSTYPE" == "NFS" ]] && tmp+="$NFSSERVER "
-        tmp+="$FSMOUNTOPTS $mountpath"
-        filsys[${passwd[0]}]+="${tmp}\n"
     fi
 }
 
@@ -74,23 +65,19 @@ function parse_external_filsys {
         # skip empty lines and comments
         ( ! (( ${#record[@]} )) || [[ ${record[0]} =~ ^# ]] ) && continue
 
-        # if we find the keyword "delete", scratch the existing FILSYS entries
-        if [[ "${record[1]}" == "delete" ]] ; then
-            filsys[${passwd[0]}]=""
-            continue
-        fi
-
         # if we have a user-specific record, grab the mount path
         # if there are more than 1 user-specific records, last one wins
-        if [[ "${record[0]}" == "${passwd[0]}" ]] ; then
+
+        if [[ "${record[0]}" == '*' ]] || [[ "${record[0]}" == "${passwd[0]}" ]] ; then
             mountpath="${record[-1]}"
+            # and copy the record over into filsys
+            # first field (user name or "*") is skipped
+            (( FILSYS )) && filsys[${passwd[0]}]="${record[@]:1}"
         fi
-
-        # and copy the record over into filsys
-        # first field (user name or "*") is skipped
-        (( FILSYS )) && filsys[${passwd[0]}]+="${record[@]:1}\n"
-
     done
+
+    # avoid returning the read's final error code
+    return 0
 }
 
 
@@ -117,18 +104,28 @@ function parse_external_filsys {
 
 function filsys_voodoo {
 
+    local tmp
+
     exportpath="${passwd[5]}"
     mountpath="${passwd[5]}"
     filsys[${passwd[0]}]=""
 
 
-    # first the sed command(s) and the corresponding FILSYS record
-    sed_filsyscfg
+    # first run the sed commands, which may modify exportpath and mountpath
+    sed_paths
 
-    # then the contents of the FSMAPFILE
+    # generate the automatic FILSYS records using those values
+    if (( FILSYS )) && (( FILSYSAUTO )) ; then
+        tmp="$FSTYPE $exportpath "
+        [[ "$FSTYPE" == "NFS" ]] && tmp+="$NFSSERVER "
+        tmp+="$FSMOUNTOPTS $mountpath"
+        filsys[${passwd[0]}]+="${tmp}"
+    fi
+
+    # if needed, swap the whole FILSYS record with data form the FSMAPFILE
     [[ "$FSMAPFILE" ]] && parse_external_filsys < "$FSMAPFILE"
 
-    # and finally the output of FSCOMMAND
+    # if needed, swap the whole FILSYS record with data form the FSCOMMAND
     [[ "$FSCOMMAND" ]] && parse_external_filsys < <( "$FSCOMMAND" "${passwd[@]}" )
 
 
