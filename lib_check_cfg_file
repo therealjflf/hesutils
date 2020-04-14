@@ -126,7 +126,7 @@ function check_cfg_file {
 
 
     # Check the binary options that default to 0
-    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSCFG GENDNSMASQ GENBIND GENUNBOUND GENKNOT
+    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSAUTO GENDNSMASQ GENBIND GENUNBOUND GENKNOT
 
     # Check the binary options that default to 1
     sanitize_binary_params 1 TRIMGECOS BLOCKUPSTREAM BLOCKATHENA
