@@ -126,26 +126,9 @@ function check_cfg_file {
 
 
     # Check the binary options that default to 0
-    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSCFG GENBIND GENUNBOUND
+    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSCFG GENDNSMASQ GENBIND GENUNBOUND GENKNOT
 
     # Check the binary options that default to 1
-    sanitize_binary_params 1 TRIMGECOS GENDNSMASQ RESTARTDNS BLOCKUPSTREAM BLOCKATHENA
-
-
-    # Check the various paths
-    if (( GENDNSMASQ )) ; then
-        DNSMASQPATH="${DNSMASQPATH:-/etc/dnsmasq.d/${HESDOMAIN}.conf}"
-        check_directory DNSMASQPATH
-    fi
-
-    if (( GENUNBOUND )) ; then
-        UNBOUNDPATH="${UNBOUNDPATH:-/etc/unbound/unbound.conf.d/${HESDOMAIN}.conf}"
-        check_directory UNBOUNDPATH
-    fi
-
-    if (( GENBIND )) ; then
-        BINDPATH="${BINDPATH:-/etc/bind/${HESDOMAIN}.db}"
-        check_directory BINDPATH
-    fi
+    sanitize_binary_params 1 TRIMGECOS BLOCKUPSTREAM BLOCKATHENA
 }
 

@@ -118,29 +118,12 @@ fi
 # The PATH hack is needed to work correctly with "bash -x script"
 fullpath="$(dirname "$(readlink -f "$(PATH=${PATH}:. which "$0")")")"
 
-if [[ "$fullpath" ]] ; then
-    prefix="${fullpath%/bin*}"
-else
-    # we should always be able to detect our prefix
-    # --> this codepath should never be taken!
-    echo "WARNING: Could not detect the installation prefix, using default: /usr" >&2
-    prefix="/usr"
-fi
-
-
-HESPREFIX="${HESPREFIX:-${prefix}}"
-HESLIBPREFIX="${HESLIBPREFIX:-${HESPREFIX}/share/hesutils}"
-
-if ! [[ -d "$HESLIBPREFIX" ]] ; then
-    echo "ERROR: The HESLIBPREFIX directory doesn't exist: $HESLIBPREFIX
-       See the Hesutils documentation for more details." >&2
-    exit 1
-fi
+HESPREFIX="${HESPREFIX:-${fullpath}}"
 
 
 # Now that the prefix is known, load the library files
 for i in ${libfiles[@]} ; do
-    source "${HESLIBPREFIX}/${i}"
+    source "${HESPREFIX}/${i}"
 done
 
 
@@ -170,7 +153,7 @@ case $cmd in
     useradd)     useradd -K UID_MIN=$UIDMIN -K UID_MAX=$UIDMAX -K GID_MIN=$GIDMIN -K GID_MAX=$GIDMAX "$@" ;;
     groupadd)    groupadd -K GID_MIN=$GIDMIN -K GID_MAX=$GIDMAX "$@" ;;
 
-    *)  echo "ERROR: How the h311 did we get here?!" >&2
+    *)  echo "ERROR: How the hell did we get here?!" >&2
         exit 1
 esac
 
