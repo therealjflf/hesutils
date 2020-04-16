@@ -49,13 +49,10 @@ Options:
 # ------------------------------------------------------------------------------
 
 # The list of library files that we'll load later
-libfiles=( lib_utils
-           lib_check_cfg_file
+libfiles=( lib_check_cfg_file
            lib_filsys
            lib_passwd_group
-           lib_gen_bind
-           lib_gen_dnsmasq
-           lib_gen_unbound )
+           lib_output )
 
 
 # As we can't query /etc/passwd and /etc/group like a database, we'll need a
@@ -172,10 +169,7 @@ parse_group
 # Generate the configuration files
 # ------------------------------------------------------------------------------
 
-# Generate and install the configuration files, and restart the servers if OK
-(( GENDNSMASQ )) && gen_dnsmasq
-(( GENUNBOUND )) && gen_unbound
-(( GENBIND ))    && gen_bind
+hes_output
 
 # And we're done!
 
