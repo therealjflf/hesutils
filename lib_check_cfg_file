@@ -131,9 +131,9 @@ function check_cfg_file {
     # Validate the output format and define the comment symbol
 
     case "$OUTPUTFMT" in
-        dnsmasq )   COMMENT='#' ;;
-        bind )      COMMENT=';' ;;
-        unbound | knot ) ;;
+        dnsmasq | unbound ) COMMENT='#' ;;
+        bind )              COMMENT=';' ;;
+        knot ) ;;
         * )
             echo "ERROR: The OUTPUTFMT is not a supported type: $OUTPUTFMT" >&2
             exit 1
