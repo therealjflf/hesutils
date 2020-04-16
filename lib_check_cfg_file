@@ -31,14 +31,14 @@ function sanitize_binary_params {
 }
 
 
-# Check if variables are empty or contains integers
+# Check if variables are really integers
 # $1+   variable names
 
 function check_integers {
 
     local i
     for i in "${@}" ; do
-        if ! [[ ${!i} =~ ^[0-9]*$ ]] ; then
+        if ! [[ ${!i} =~ ^[0-9]+$ ]] ; then
             echo "ERROR: The option $i requires an integer value." >&2
             exit 1
         fi
@@ -67,8 +67,17 @@ function check_directory {
 
 function check_cfg_file {
 
-    # LHS can be empty, RHS cannot
-    [[ "$RHS" ]] || RHS=".hesiod"
+    # Set some default values if empty
+
+    [[ "$RHS" ]] || RHS=".hesiod"   # LHS can be empty, RHS cannot
+    [[ "$UIDMIN" ]] || UIDMIN=5000
+    [[ "$UIDMAX" ]] || UIDMAX=5999
+    [[ "$GIDMIN" ]] || GIDMIN=$UIDMIN
+    [[ "$GIDMAX" ]] || GIDMAX=$UIDMAX
+    [[ "$FSTYPE" ]] || FSTYPE="NFS"
+    [[ "$NFSSERVER" ]] || NFSSERVER=$(hostname -f)
+    [[ "$FSMOUNTOPTS" ]] || FSMOUNTOPTS="rw"
+    [[ "$OUTPUTFMT" ]] || OUTPUTFMT="dnsmasq"
 
     # The standard calls for LHS and RHS starting with leading dots. Those just get
     # in the way, so strip them.
@@ -79,14 +88,8 @@ function check_cfg_file {
     HESDOMAIN="${LHS:+${LHS}.}${RHS}"
 
 
-    # Check if all UID and GID values are empty or integers
+    # Make sure that the UID and GID values are really integers
     check_integers {UID,GID}{MIN,MAX}
-
-    # Set default values if they're empty
-    [[ "$UIDMIN" ]] || UIDMIN=5000
-    [[ "$UIDMAX" ]] || UIDMAX=5999
-    [[ "$GIDMIN" ]] || GIDMIN=$UIDMIN
-    [[ "$GIDMAX" ]] || GIDMAX=$UIDMAX
 
     # Check the UID and GID values
     if (( UIDMIN > UIDMAX || GIDMIN > GIDMAX )) ; then
@@ -125,8 +128,20 @@ function check_cfg_file {
     fi
 
 
+    # Validate the output format and define the comment symbol
+
+    case "$OUTPUTFMT" in
+        dnsmasq )   COMMENT='#' ;;
+        bind )      COMMENT=';' ;;
+        unbound | knot ) ;;
+        * )
+            echo "ERROR: The OUTPUTFMT is not a supported type: $OUTPUTFMT" >&2
+            exit 1
+    esac
+
+
     # Check the binary options that default to 0
-    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSAUTO GENDNSMASQ GENBIND GENUNBOUND GENKNOT
+    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSAUTO
 
     # Check the binary options that default to 1
     sanitize_binary_params 1 TRIMGECOS BLOCKUPSTREAM BLOCKATHENA
