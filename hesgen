@@ -7,9 +7,26 @@
 # ------------------------------------------------------------------------------
 #
 # Read the information contained in /etc/passwd and /etc/groups, and generate
-# DNS configuration files containing Hesiod entries for selected users and
-# groups.
+# DNS TXT records containing Hesiod entries for selected users and groups.
 # 
+# ==============================================================================
+#
+# This file is part of Hesutils <https://gitlab.com/jflf/hesutils>
+# Hesutils Copyright (c) 2019-2020 JFLF
+#
+# Hesutils is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Hesutils is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Hesutils. If not, see <https://www.gnu.org/licenses/>.
+#
 # ==============================================================================
 
 
