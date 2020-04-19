@@ -55,8 +55,8 @@ function hes_output {
 
     # Notes:
     # - numerical indices (eg. ${!uid2user[@]}) are sorted automatically
-    # - dnsmasq doesn't support CNAME, we need to repeat the TXT records twice:
-    #   .user and .UID, and .group and .GID...
+    # - dnsmasq doesn't support CNAMEs and unbound doesn't expand them, so we
+    #   need to repeat the TXT records twice: .user + .UID, .group + .GID...
 
 
     # user and UID records first
@@ -70,9 +70,8 @@ function hes_output {
                     printf 'txt-record=%s.%s,"%s"\n' ${uid}.uid $HESDOMAIN "$line"
                     ;;
                 unbound )
-                    # not sure yet how to do a CNAME with unbound
-                    printf "local-data: '%s.%s TXT \"%s\"'\n" ${user}.passwd $HESDOMAIN "$line"
-                    printf "local-data: '%s.%s TXT \"%s\"'\n" ${uid}.uid $HESDOMAIN "$line"
+                    printf $'local-data: \'%s.%s TXT "%s"\'\n' ${user}.passwd $HESDOMAIN "$line"
+                    printf $'local-data: \'%s.%s TXT "%s"\'\n' ${uid}.uid $HESDOMAIN "$line"
                     ;;
                 bind )
                     printf '%-19s IN  TXT    "%s"\n' ${user}.passwd "$line"
@@ -97,9 +96,8 @@ function hes_output {
                     printf 'txt-record=%s.%s,"%s"\n' ${gid}.gid $HESDOMAIN "$line"
                     ;;
                 unbound )
-                    # not sure yet how to do a CNAME with unbound
-                    printf "local-data: '%s.%s TXT \"%s\"'\n" ${group}.group $HESDOMAIN "$line"
-                    printf "local-data: '%s.%s TXT \"%s\"'\n" ${gid}.gid $HESDOMAIN "$line"
+                    printf $'local-data: \'%s.%s TXT "%s"\'\n' ${group}.group $HESDOMAIN "$line"
+                    printf $'local-data: \'%s.%s TXT "%s"\'\n' ${gid}.gid $HESDOMAIN "$line"
                     ;;
                 bind )
                     printf '%-19s IN  TXT    "%s"\n' ${group}.group "$line"
@@ -123,7 +121,7 @@ function hes_output {
                     printf 'txt-record=%s.%s,"%s"\n' ${user}.grplist $HESDOMAIN "$line"
                     ;;
                 unbound )
-                    printf "local-data: '%s.%s TXT \"%s\"'\n" ${user}.grplist $HESDOMAIN "$line"
+                    printf $'local-data: \'%s.%s TXT "%s"\'\n' ${user}.grplist $HESDOMAIN "$line"
                     ;;
                 bind )
                     printf '%-19s IN  TXT    "%s"\n' ${user}.grplist "$line"
@@ -149,7 +147,7 @@ function hes_output {
                         printf 'txt-record=%s.%s,"%s"\n' ${user}.filsys $HESDOMAIN "$line"
                         ;;
                     unbound )
-                        printf "local-data: '%s.%s TXT \"%s\"'\n" ${user}.filsys $HESDOMAIN "$line"
+                        printf $'local-data: \'%s.%s TXT "%s"\'\n' ${user}.filsys $HESDOMAIN "$line"
                         ;;
                     bind )
                         printf '%-19s IN  TXT    "%s"\n' ${user}.filsys "$line"
