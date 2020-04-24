@@ -148,17 +148,18 @@ done
 # Those can be defined via the command line too, which has priority
 HESCFGFILE="${HESCFGFILE:-/etc/hesutils.conf}"
 
-if ! [ -r "$HESCFGFILE" ] ; then
-    echo "ERROR: The file doesn't exist or is not readable: HESCFGFILE=${HESCFGFILE}" >&2
-    exit 1
-fi
-
 
 
 # Load and check the configuration file
 # ------------------------------------------------------------------------------
 
-source "$HESCFGFILE"
+if [ -r "$HESCFGFILE" ] ; then
+    source "$HESCFGFILE"
+else
+    echo "WARNING: The configuration file doesn't exist or is not readable: HESCFGFILE=${HESCFGFILE}" >&2
+    echo -e "         Using default values for everything.\n" >&2
+fi
+
 check_cfg_file      # exits in case of errors, checks and assigns default values
 
 
@@ -168,8 +169,8 @@ check_cfg_file      # exits in case of errors, checks and assigns default values
 
 case $cmd in
 
-    useradd)     useradd -K UID_MIN=$UIDMIN -K UID_MAX=$UIDMAX -K GID_MIN=$GIDMIN -K GID_MAX=$GIDMAX "$@" ;;
-    groupadd)    groupadd -K GID_MIN=$GIDMIN -K GID_MAX=$GIDMAX "$@" ;;
+    useradd)    useradd -K UID_MIN=$UIDMIN -K UID_MAX=$UIDMAX -K GID_MIN=$GIDMIN -K GID_MAX=$GIDMAX "$@" ;;
+    groupadd)   groupadd -K GID_MIN=$GIDMIN -K GID_MAX=$GIDMAX "$@" ;;
 
     *)  echo "ERROR: How the hell did we get here?!" >&2
         exit 1

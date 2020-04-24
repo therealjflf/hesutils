@@ -145,7 +145,7 @@ HESCFGFILE="${HESCFGFILE:-/etc/hesutils.conf}"
 HESPASSWDFILE="${HESPASSWDFILE:-/etc/passwd}"
 HESGROUPFILE="${HESGROUPFILE:-/etc/group}"
 
-for file in HES{CFG,PASSWD,GROUP}FILE ; do
+for file in HES{PASSWD,GROUP}FILE ; do
     if ! [ -r "${!file}" ] ; then
         echo "ERROR: The file doesn't exist or is not readable: ${file}=${!file}" >&2
         exit 1
@@ -167,8 +167,13 @@ fi
 # Load and check the configuration file
 # ------------------------------------------------------------------------------
 
-(( verbose )) && echo "Loading the configuration file"
-source "$HESCFGFILE"
+if [ -r "$HESCFGFILE" ] ; then
+    (( verbose )) && echo "Loading the configuration file"
+    source "$HESCFGFILE"
+else
+    echo "WARNING: The configuration file doesn't exist or is not readable: HESCFGFILE=${HESCFGFILE}" >&2
+    echo -e "         Using default values for everything.\n" >&2
+fi
 
 (( verbose )) && echo "Checking the configuration file"
 check_cfg_file      # exits in case of errors, checks and assigns default values
