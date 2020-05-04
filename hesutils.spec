@@ -60,8 +60,7 @@ mkdir -p %{buildroot}/%{_sbindir}/
 mkdir -p %{buildroot}/%{_sysconfdir}/
 mkdir -p %{buildroot}/%{_datadir}/hesutils/
 
-install -m 755 %{SOURCEURL0}/{hesadd,hesgen} %{buildroot}/%{_datadir}/hesutils/
-install -m 644 %{SOURCEURL0}/lib_* %{buildroot}/%{_datadir}/hesutils/
+install -m 755 %{SOURCEURL0}/src/* %{buildroot}/%{_datadir}/hesutils/
 
 ln -s %{_datadir}/hesutils/hesadd %{buildroot}/%{_sbindir}/hesadd
 ln -s %{_datadir}/hesutils/hesadd %{buildroot}/%{_sbindir}/hesuseradd
