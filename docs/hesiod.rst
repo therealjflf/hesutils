@@ -32,7 +32,7 @@ There are a lot of very good reasons for using Hesiod over alternatives like NIS
   - Query syntax trivially encoded in the domain of the DNS request (e.g. ``joe.passwd.tech.chicago.ns.mycorp.com`` -- even without knowing anything about Hesiod you can already figure out what this request is for);
 
 
-- As the data is sent via DNS, Hesiod benefits from the strenghts of the DNS protocol. This includes things like:
+- As the data is sent via DNS, Hesiod benefits from the strengths of the DNS protocol. This includes things like:
 
   - Built-in high-availability (one of DNS' most underrated design features);
 
@@ -47,7 +47,7 @@ There are a lot of very good reasons for using Hesiod over alternatives like NIS
   - DNS scales.
 
 
-The key reason for using Hesiod is really its simplicity. The dominant directory service at that point in time is LDAP, and its most common implementation on Linux systems is OpenLDAP. A general opinion that I (the Hesutils author) hold and have heard from colleagues again and again over the years is that OpenLDAP is overly complicated, suffers from very poor choices that seriously affect usability, and is overkill in a lot of cases. Hesiod is a much simpler solution, that's faster and easier to deploy and manage.
+The key reason for using Hesiod is really its simplicity. The dominant directory service at that point in time is LDAP, and its most common implementation on Linux systems is OpenLDAP. A general opinion that I (the Hesutils author) hold and have heard from colleagues again and again over the years is that OpenLDAP is overly complicated, suffers from very poor design choices that seriously affect usability, and is overkill in a lot of cases. Hesiod is a much simpler solution, that's faster and easier to deploy and manage.
 
 
 A good description of that situation is given in this blog post (`archive.org cache <https://web.archive.org/web/20190922024716/https://soylentnews.org/meta/article.pl?sid=15/07/13/0255214>`_):
@@ -121,6 +121,24 @@ As a corollary there isn't really a thing called a Hesiod server: it's just a DN
 
 What type of information is available via Hesiod?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The easiest way to understand Hesiod is to think of it essentially as centralized, network-wide ``/etc/passwd`` and ``/etc/group`` files. The DNS answers contain exactly the same information as would be obtained from either of those files, formatted in the exact same way.
+
+For a given user, let's call him ``joe`` with ``uid 1234``, belonging to the primary group ``admin`` with ``gid 1000``, the valid DNS requests and answers are:
+
+ - ``joe.passwd.<domain>`` providing Joe's ``/etc/passwd`` entry;
+
+ - ``1234.gid.<domain>`` also providing Joe's ``/etc/passwd`` entry;
+
+ - ``admin.group.<domain>`` providing the ``admin`` group's ``/etc/group`` entry;
+
+ - ``1000.gid.<domain>`` also providing the ``admin`` group's ``/etc/group`` entry.
+
+
+An additional, optional type of record called ``filsys`` can provide home directory information to the automounter daemon of the client machines, per user. That way remote home directories over NFS or other filesystems can be mounted on-demand when the user logs in.
+
+
+The original Hesiod deployment at MIT contained much more than this. One could get details like printer spool information, preferred mail server, etc. Support for such requests need to be implemented by the software that needs it, which was never done in the Linux world as far as I know. So the Hesutils doesn't cover that.
 
 
 
