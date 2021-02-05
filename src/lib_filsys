@@ -55,7 +55,7 @@ function sed_paths {
 
     # the export path is only useful for FILSYS setups
 
-    if (( FILSYS )) && (( FILSYSAUTO )) && [[ "$HOMESEDEXPORT" ]] ; then
+    if (( FILSYS )) && [[ "$HOMESEDEXPORT" ]] ; then
         if tmp="$( echo $exportpath | sed "$HOMESEDEXPORT" 2>/dev/null )" ; then
             exportpath="$tmp"
         else
