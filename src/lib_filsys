@@ -43,7 +43,7 @@ function sed_paths {
     local tmp
 
     # first go through both sed commands
-    # the mount path is used both with and without FILSYS
+    # the mount path transformation applies to both with and without FILSYS
 
     if [[ "$HOMESEDMOUNT" ]] ; then
         if tmp="$( echo $mountpath | sed "$HOMESEDMOUNT" 2>/dev/null )" ; then
@@ -53,7 +53,7 @@ function sed_paths {
         fi
     fi
 
-    # the export path is only useful for FILSYS setups
+    # the export path transformation is only useful for FILSYS setups
 
     if (( FILSYS )) && [[ "$HOMESEDEXPORT" ]] ; then
         if tmp="$( echo $exportpath | sed "$HOMESEDEXPORT" 2>/dev/null )" ; then
@@ -137,8 +137,12 @@ function filsys_voodoo {
 
     # generate the automatic FILSYS records using those values
     if (( FILSYS )) && (( FILSYSAUTO )) ; then
-        tmp="$FSTYPE $exportpath "
-        [[ "$FSTYPE" == "NFS" ]] && tmp+="$NFSSERVER "
+        tmp="$FSTYPE "
+        case "$FSTYPE" in
+            "AFS")  tmp+="$exportpath " ;;
+            "NFS")  tmp+="$exportpath $NFSSERVER " ;;
+            *)      tmp+="${FSDEVICE//\{\}/$exportpath} ";;
+        esac
         tmp+="$FSMOUNTOPTS $mountpath"
         filsys[${passwd[0]}]+="${tmp}"
     fi
