@@ -132,11 +132,10 @@ function check_cfg_file {
     # Some of the FILSYS variables can't be checked, so nothing to do there:
     # HOMESEDEXPORT, HOMESEDMOUNT, NFSSERVER
 
-    # I don't really want to check the FSTYPE. The documentation on the Linux
-    # side isn't very good. I can't find an authoritative list of what is or is
-    # not supported by autofs, and anyway every case imaginable would need to be
-    # tested and validated.
-    # So yeah, let it be whatever the user wants and caveat emptor.
+    if [[ "$FSTYPE" && "$FSTYPE" != "NFS" && "$FSTYPE" != "AFS" && ! "$FSDEVICE" ]] ; then
+        echo "ERROR: The option FSDEVICE is mandatory when FSTYPE is neither NFS nor AFS." >&2
+        exit 1
+    fi
 
     if [[ "$FSMAPFILE" && ! -r "$FSMAPFILE" ]] ; then
         echo "ERROR: The FSMAPFILE doesn't exist or is not readable: $FSMAPFILE" >&2
