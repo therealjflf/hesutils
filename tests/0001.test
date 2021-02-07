@@ -1,0 +1,4 @@
+# Check that hesgen runs
+
+CMDLINE=(hesgen -h)
+RETVAL=0

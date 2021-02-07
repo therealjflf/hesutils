@@ -1,0 +1,4 @@
+# Check that hesadd runs
+
+CMDLINE=(hesadd -h)
+RETVAL=0
