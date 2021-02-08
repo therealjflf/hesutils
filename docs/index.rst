@@ -2,7 +2,7 @@
 Hesutils documentation
 ======================
 
-This wiki contains the documentation for Hesutils, the Hesiod utilities.
+This site contains the documentation for Hesutils, the Hesiod utilities.
 
 
 Introduction to Hesiod
@@ -16,7 +16,8 @@ Using the Hesutils tools
 ------------------------
 
 - The Hesutils `model of operations <model.rst>`_
-- The `problem with multiple $HOME paths <homepaths.rst>`_
+- The `problem of the multiple home paths <homepaths.rst>`_
+- The `FILSYS records <filsys.rst>`_
 - The Hesutils `configuration file <conffile.rst>`_
 - `hesadd`: `user and group management <hesadd.rst>`_
 - `hesgen`: `generating the Hesiod DNS records <hesgen.rst>`_
@@ -41,4 +42,7 @@ Hesiod client configuration
 
 Hesiod tips, tricks and examples
 --------------------------------
+
+- `Basic examples <exbasic.rst>`_
+- `Advanced FILSYS examples <exadvanced.rst>`_
 
