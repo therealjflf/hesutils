@@ -1,0 +1,4 @@
+# Test built-in configuration defaults
+
+CMDLINE=( HESCFGFILE=empty HESPASSWDFILE=empty HESGROUPFILE=empty hesgen )
+RETVAL=0

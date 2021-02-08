@@ -1,0 +1,6 @@
+# Test that the -v option works
+
+CMDLINE=( hesgen -v -d -c empty -p empty -g empty )
+RETVAL=0
+OUTFILE=0016.out
+ERRFILE=0016.err

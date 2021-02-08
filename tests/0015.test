@@ -1,0 +1,5 @@
+# Test that the -d option works
+
+CMDLINE=( hesgen -d -c empty -p empty -g empty )
+RETVAL=0
+OUTFILE=0015.out

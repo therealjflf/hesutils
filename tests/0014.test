@@ -1,0 +1,4 @@
+# Test using a non-existing group file
+
+CMDLINE=( hesgen -p empty -g XXX )
+RETVAL=1

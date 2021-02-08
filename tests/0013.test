@@ -1,0 +1,4 @@
+# Test using a non-existing passwd file
+
+CMDLINE=( hesgen -p XXX -g empty )
+RETVAL=1

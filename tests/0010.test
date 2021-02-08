@@ -1,0 +1,4 @@
+# Test using a non-existing configuration file
+
+CMDLINE=( hesgen -c XXX -p empty -g empty )
+RETVAL=0
