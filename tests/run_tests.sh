@@ -167,8 +167,8 @@ function check_results {
 
     echo "*** Checking the results of the test."
 
-    if [[ "$RETVAL" ]] && (( "$RETVAL" != "$ret" )) ; then
-        echo "Mismatch in return values: expected $RETVAL, got $ret."
+    if [[ "$RETVAL" ]] && (( "$RETVAL" != "$testret" )) ; then
+        echo "Mismatch in return values: expected $RETVAL, got $testret."
         failed=1
     fi
 
@@ -193,47 +193,95 @@ function check_results {
 function run_test {
 
     # Clean up the previous test's environment
-    unset CMDLINE OUTFILE ERRFILE RETVAL
+    unset CMDLINE OUTFILE ERRFILE RETVAL testret
+
 
     dirname="$(dirname "$1")"
     bname="$(basename "$1")"
-    logfile="${bname}.log"
+    logfile="${1}.log"
 
     (( ++testcount ))
 
-    echo -n "$1 :  "
+    printf "%-16s: " "$1"
 
+
+    # We're not writing to the logfile yet, as we don't know if the test file,
+    # and the directory containing it, exist.
     if [[ ! -r "$1" ]] ; then
-        colorprint yellow "File doesn't exist: $1"
+        colorprint yellow "Test file could not be read"
         (( ++didntrun ))
         return 1
     fi
+
+
+    # We can now assume that we can create the log file, and redirect stdout and
+    # stderr to it. Fear the syntax.
+    exec 8>&1 9>&2 1>"$logfile" 2>&1
+
+
+    #\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+    #
+    #   EVERY OUTPUT TO STDOUT AND STDERR BELOW THIS LINE IS REDIRECTED TO
+    #   THE LOG FILE.
+    #
+    #\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+
 
     pushd "$dirname" >/dev/null 2>&1
 
+
+    #\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+    #
+    #   EVERY PATH BELOW THIS LINE IS RELATIVE TO THE DIRECTORY CONTAINING
+    #   THE TEST FILE, NOT THE PWD WHEN THE SCRIPT WAS EXECUTED.
+    #
+    #\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+
+
     # Load the test file and validate it
     # Skip to next test if something went wrong
-    echo "*** Loading test file $bname" >>"$logfile"
+    echo "*** Loading test file $bname"
 
-    if ! source "$bname" >>"$logfile" 2>&1 || ! validate_env >>"$logfile" 2>&1 ; then
+    if ! source "$bname" || ! validate_env 2>&1 ; then
+        popd >/dev/null 2>&1
+        exec 1>&8 2>&9 8>&- 9>&-
         colorprint yellow "Didn't run"
         (( ++didntrun ))
-        popd >/dev/null 2>&1
         return 1
     fi
 
+
     # Output and error files for this test, if we need to compare them
-    [[ "$OUTFILE" ]] && ofile="${bname}.out"
-    [[ "$ERRFILE" ]] && efile="${bname}.err"
+    [[ "$OUTFILE" ]] && ofile="${bname}.out" || ofile=
+    [[ "$ERRFILE" ]] && efile="${bname}.err" || efile=
+
 
     # Run the command
-    echo "*** Running the test:" >>"$logfile"
-    echo "    ${CMDLINE[@]} 1>${ofile:-/dev/null} 2>${efile:-/dev/null}" >>"$logfile"
+    echo "*** Running the test:"
+    echo "    ${CMDLINE[@]} 1>${ofile:-/dev/null} 2>${efile:-/dev/null}"
     "${CMDLINE[@]}" 1>"${ofile:-/dev/null}" 2>"${efile:-/dev/null}"
-    ret=$?
+    testret=$?  # used in check_results
+
 
     # And check the results
-    if check_results >>"$logfile" 2>&1 ; then
+    check_results
+    checkret=$?
+
+
+    # Back to our original settings
+    popd >/dev/null 2>&1
+    exec 1>&8 2>&9 8>&- 9>&-
+
+
+    #\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+    #
+    #   EVERYTHING BELOW THIS LINE GOES BACK TO STDOUT AND STDERR, AND IS
+    #   RELATIVE TO THE ORIGINAL PWD.
+    #
+    #\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+
+
+    if ! (( $testret )) ; then
         colorprint green "OK"
         (( ++successes ))
     else
@@ -241,7 +289,7 @@ function run_test {
         (( ++failures ))
     fi
 
-    popd >/dev/null 2>&1
+    # Returns the return value of the test: 0 if OK, 1 if failed
 }
 
 
