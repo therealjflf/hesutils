@@ -261,8 +261,10 @@ function run_test {
     # Run the command
     echo "*** Running the test:"
     echo "    ${CMDLINE[@]} 1>${ofile} 2>${efile}"
-    "${CMDLINE[@]}" 1>"${ofile}" 2>"${efile}"
+    eval "${CMDLINE[@]}" 1>"${ofile}" 2>"${efile}"
     testret=$?  # used in check_results
+
+    echo "*** The test returned the value $testret"
 
 
     # And check the results
@@ -283,7 +285,7 @@ function run_test {
     #\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 
 
-    if ! (( $testret )) ; then
+    if ! (( $checkret )) ; then
         colorprint green "OK"
         (( ++successes ))
     else
