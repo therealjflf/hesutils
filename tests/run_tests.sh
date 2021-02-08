@@ -98,14 +98,16 @@ function colorprint {
     col="$1" ; shift
 
     color=''
-    nocolor='\e[0m'
+    nocolor=''
 
-    # switch to color text
-    case $col in
-        red)    color='\e[31;1m' ;;
-        green)  color='\e[32;1m' ;;
-        yellow) color='\e[33;1m' ;;
-    esac
+    if (( colors )) ; then
+        nocolor='\e[0m'
+        case $col in
+            red)    color='\e[31;1m' ;;
+            green)  color='\e[32;1m' ;;
+            yellow) color='\e[33;1m' ;;
+        esac
+    fi
 
     printf "${color}%s${nocolor}\n" "${*}"
 }
