@@ -42,22 +42,22 @@ function parse_passwd {
 
     local delayedwarnings=""
 
-    (( verbose )) && echo -en "\nProcessing the passwd file entries: "
+    (( verbose )) && echo -en "\nProcessing the passwd file entries: " >&2
 
     while IFS=: read -a passwd ; do
 
         if (( ${passwd[2]} < UIDMIN || UIDMAX < ${passwd[2]} )) ; then
             # user out of Hesiod range, nothing to do
-            (( verbose )) && echo -n "x"
+            (( verbose )) && echo -n "x" >&2
             continue
         elif (( ${passwd[3]} < GIDMIN || GIDMAX < ${passwd[3]} )) ; then
             # user is in the Hesiod range, but the primary group isn't
-            (( verbose )) && echo -n "!"
+            (( verbose )) && echo -n "!" >&2
             delayedwarnings+="WARNING: Skipping user \"${passwd[0]}\": GID ${passwd[3]} not in range [$GIDMIN-$GIDMAX]\n"
             continue
         else
             # good Hesiod user
-            (( verbose )) && echo -n "."
+            (( verbose )) && echo -n "." >&2
         fi
 
         # Some distros don't add a given user to its own group in /etc/passwd...
@@ -86,10 +86,10 @@ function parse_passwd {
 
     done < <(awk 'NF && !/^[:space:]*#/' "$HESPASSWDFILE")
 
-    (( verbose )) && echo
+    (( verbose )) && echo >&2
     echo -en "$delayedwarnings" >&2
 
-    (( verbose )) && echo -e "  --> ${#hesusers[@]} Hesiod users" || true
+    (( verbose )) && echo -e "  --> ${#hesusers[@]} Hesiod users" >&2 || true
 }
 
 
@@ -105,15 +105,15 @@ function parse_passwd {
 
 function parse_group {
 
-    (( verbose )) && echo -n "Processing the group file entries: "
+    (( verbose )) && echo -n "Processing the group file entries: " >&2
 
     while IFS=: read -a group ; do
 
         # only deal with Hesiod groups
         if (( GIDMIN <= ${group[2]} && ${group[2]} <= GIDMAX )) ; then
-            (( verbose )) && echo -n "."
+            (( verbose )) && echo -n "." >&2
         else
-            (( verbose )) && echo -n "x"
+            (( verbose )) && echo -n "x" >&2
             continue
         fi
 
@@ -145,6 +145,6 @@ function parse_group {
 
     done < <(awk 'NF && !/^[:space:]*#/' "$HESGROUPFILE")
 
-    (( verbose )) && echo -e "\n  --> ${#hesgroups[@]} Hesiod groups" || true
+    (( verbose )) && echo -e "\n  --> ${#hesgroups[@]} Hesiod groups" >&2 || true
 }
 

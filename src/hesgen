@@ -163,7 +163,7 @@ if (( verbose )) ; then
 Configuration file: $HESCFGFILE
 Passwd file:        $HESPASSWDFILE
 Group file:         $HESGROUPFILE
-"
+" >&2
 fi
 
 
@@ -172,14 +172,14 @@ fi
 # ------------------------------------------------------------------------------
 
 if [ -r "$HESCFGFILE" ] ; then
-    (( verbose )) && echo "Loading the configuration file"
+    (( verbose )) && echo "Loading the configuration file" >&2
     source "$HESCFGFILE"
 else
     echo "WARNING: The configuration file doesn't exist or is not readable: HESCFGFILE=${HESCFGFILE}" >&2
     echo -e "         Using default values for everything.\n" >&2
 fi
 
-(( verbose )) && echo "Checking the configuration file"
+(( verbose )) && echo "Checking the configuration file" >&2
 check_cfg_file      # exits in case of errors, checks and assigns default values
 
 
