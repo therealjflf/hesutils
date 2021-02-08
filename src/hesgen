@@ -2,7 +2,7 @@
 
 # ==============================================================================
 #
-# hesgenerate
+# hesgen
 #
 # ------------------------------------------------------------------------------
 #
@@ -53,6 +53,7 @@ Options:
 
   -h                display this help message and exit
   -v                run in verbose mode
+  -d                don't print out the date in the output
   -c <filename>     use an alternative configuration file
   -p <filename>     use an alternative passwd file
   -g <filename>     use an alternative group file
@@ -85,6 +86,7 @@ declare -A hesgroups        # index: group name ->  /etc/group string
 declare -A filsys           # index: user name  ->  filsys record(s)
 
 declare -i verbose=0
+declare -i dateout=1
 
 
 
@@ -92,7 +94,7 @@ declare -i verbose=0
 # ------------------------------------------------------------------------------
 
 OPTIND=1
-optstring=":hvc:p:g:"
+optstring=":hvdc:p:g:"
 
 while getopts $optstring name ; do
     case $name in
@@ -100,6 +102,8 @@ while getopts $optstring name ; do
             exit 0
             ;;
         v)  verbose=1
+            ;;
+        d)  dateout=0
             ;;
         c)  HESCFGFILE="$OPTARG"
             ;;
