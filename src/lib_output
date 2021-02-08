@@ -121,8 +121,8 @@ function hes_output {
                     printf $'local-data:\t\'%s.%s\tTXT\t"%s"\'\n' ${gid}.gid $HESDOMAIN "$line"
                     ;;
                 bind )
-                    printf $'%s\tIN\tTXT\t"%s"\n' ${group}.group "$line"
-                    printf $'%s\tIN\tCNAME\t%s\n' ${gid}.gid ${group}.group
+                    printf $'%s\tTXT\t"%s"\n' ${group}.group "$line"
+                    printf $'%s\tCNAME\t%s\n' ${gid}.gid ${group}.group
                     ;;
             esac
 
@@ -179,7 +179,7 @@ function hes_output {
                         ;;
                 esac
 
-            done < <(echo -e ${filsys[$user]} | sanitize_TXT)
+            done < <(echo "${filsys[$user]}" | sanitize_TXT)
 
         done
     fi

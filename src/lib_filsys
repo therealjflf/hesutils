@@ -144,7 +144,7 @@ function filsys_voodoo {
             *)      tmp+="${FSDEVICE//\{\}/$exportpath} ";;
         esac
         tmp+="$FSMOUNTOPTS $mountpath"
-        filsys[${passwd[0]}]+="${tmp}"
+        filsys[${passwd[0]}]="${tmp}"
     fi
 
     # if needed, swap the whole FILSYS record with data form the FSMAPFILE
