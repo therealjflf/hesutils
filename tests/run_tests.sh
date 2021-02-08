@@ -200,6 +200,11 @@ function run_test {
     bname="$(basename "$1")"
     logfile="${1}.log"
 
+    # Those will be the test's stdout and stderr files
+    ofile="${bname}.out"
+    efile="${bname}.err"
+
+
     (( ++testcount ))
 
     printf "%-16s: " "$1"
@@ -251,15 +256,10 @@ function run_test {
     fi
 
 
-    # Output and error files for this test, if we need to compare them
-    [[ "$OUTFILE" ]] && ofile="${bname}.out" || ofile=
-    [[ "$ERRFILE" ]] && efile="${bname}.err" || efile=
-
-
     # Run the command
     echo "*** Running the test:"
-    echo "    ${CMDLINE[@]} 1>${ofile:-/dev/null} 2>${efile:-/dev/null}"
-    "${CMDLINE[@]}" 1>"${ofile:-/dev/null}" 2>"${efile:-/dev/null}"
+    echo "    ${CMDLINE[@]} 1>${ofile} 2>${efile}"
+    "${CMDLINE[@]}" 1>"${ofile}" 2>"${efile}"
     testret=$?  # used in check_results
 
 
@@ -304,12 +304,6 @@ function run_test {
 [[ -t 1 ]] || colors=0
 
 
-# # Check that hesgen and hesadd are in the path
-# if ! which hesadd hesgen >/dev/null 2>&1 ; then
-#     echo "ERROR: Couldn't find hesadd and/or hesgen in the PATH." >&2
-#     exit 1
-# fi
-
 
 # Loop over all test files in the current directory
 for i in "${@}" ; do
@@ -323,6 +317,7 @@ echo -n "Tests that ran successfully: " ; colorprint green $successes
 echo -n "Tests that ran and failed:   " ; colorprint red $failures
 echo -n "Tests that didn't run:       " ; colorprint yellow $didntrun
 echo    "Total number of tests:       $testcount"
+
 
 if (( failures )) || (( didntrun )) ; then
     exit 1
