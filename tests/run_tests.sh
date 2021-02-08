@@ -169,19 +169,31 @@ function check_results {
 
     echo "*** Checking the results of the test."
 
-    if [[ "$RETVAL" ]] && (( "$RETVAL" != "$testret" )) ; then
-        echo "Mismatch in return values: expected $RETVAL, got $testret."
-        failed=1
+    if [[ "$RETVAL" ]] ; then
+        if (( "$RETVAL" == "$testret" )) ; then
+            echo "The return values match: $RETVAL"
+        else
+            echo "Mismatch in return values: expected $RETVAL, got $testret."
+            failed=1
+        fi
     fi
 
-    if [[ "$OUTFILE" ]] && ! cmp "$OUTFILE" "$ofile" ; then
-        echo "Mismatch in the output of stdout."
-        failed=1
+    if [[ "$OUTFILE" ]] ; then
+        if cmp "$OUTFILE" "$ofile" ; then
+            echo "The stdout outputs match."
+        else
+            echo "Mismatch in the output of stdout."
+            failed=1
+        fi
     fi
 
-    if [[ "$ERRFILE" ]] && ! cmp "$ERRFILE" "$efile" ; then
-        echo "Mismatch in the output of stderr."
-        failed=1
+    if [[ "$ERRFILE" ]] ; then
+        if cmp "$ERRFILE" "$efile" ; then
+            echo "The stderr outputs match."
+        else
+            echo "Mismatch in the output of stderr."
+            failed=1
+        fi
     fi
 
     return $failed
