@@ -163,6 +163,6 @@ function check_cfg_file {
     sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSAUTO
 
     # Check the binary options that default to 1
-    sanitize_binary_params 1 TRIMGECOS BLOCKUPSTREAM BLOCKATHENA
+    sanitize_binary_params 1 TRIMGECOS CREATEZONE BLOCKUPSTREAM BLOCKATHENA
 }
 
