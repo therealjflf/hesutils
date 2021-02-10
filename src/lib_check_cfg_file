@@ -148,7 +148,7 @@ function check_cfg_file {
     fi
 
 
-    # Validate the output format and define the comment symbol
+    # Validate the DNS options
 
     case "$OUTPUTFMT" in
         dnsmasq | unbound ) COMMENT='#' ;;
@@ -157,6 +157,18 @@ function check_cfg_file {
             echo "ERROR: The OUTPUTFMT is not a supported type: $OUTPUTFMT" >&2
             exit 1
     esac
+
+    [[ "$TTL" ]] && check_integers TTL
+
+    if [[ "${SOA}" ]] ; then
+        if [[ ! "$(declare -p SOA 2>/dev/null)" =~ ^declare\ -a ]] ; then
+            echo "ERROR: SOA isn't an array." >&2
+            exit 1
+        elif (( ${#SOA[@]} != 7 )) ; then
+            echo "ERROR: Expected 7 SOA fields, found ${#SOA[@]}." >&2
+            exit 1
+        fi
+    fi
 
 
     # Check the binary options that default to 0
