@@ -100,6 +100,14 @@ function check_cfg_file {
     [[ "$FSMOUNTOPTS" ]] || FSMOUNTOPTS="rw"
     [[ "$OUTPUTFMT" ]] || OUTPUTFMT="dnsmasq"
 
+
+    # Check the binary options that default to 0
+    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSAUTO
+
+    # Check the binary options that default to 1
+    sanitize_binary_params 1 TRIMGECOS CREATEZONE BLOCKUPSTREAM BLOCKATHENA
+
+
     # The standard calls for LHS and RHS starting with leading dots. Those just get
     # in the way, so strip them.
     LHS="${LHS#.}"
@@ -160,6 +168,11 @@ function check_cfg_file {
 
     [[ "$TTL" ]] && check_integers TTL
 
+    if [[ "$OUTPUTFMT" == bind && ! "$SOA" ]] && (( CREATEZONE )) ; then
+        echo "ERROR: SOA is mandatory when OUTPUTFMT=bind and CREATEZONE=1." >&2
+        exit 1
+    fi
+
     if [[ "${SOA}" ]] ; then
         if [[ ! "$(declare -p SOA 2>/dev/null)" =~ ^declare\ -a ]] ; then
             echo "ERROR: SOA isn't an array." >&2
@@ -169,12 +182,5 @@ function check_cfg_file {
             exit 1
         fi
     fi
-
-
-    # Check the binary options that default to 0
-    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSAUTO
-
-    # Check the binary options that default to 1
-    sanitize_binary_params 1 TRIMGECOS CREATEZONE BLOCKUPSTREAM BLOCKATHENA
 }
 

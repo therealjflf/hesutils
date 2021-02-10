@@ -35,7 +35,7 @@
 function sanitize_generic { sed -e 's/"/\\\\"/g' ; }
 
 # Unbound needs the single quotes removed too, as you can't escape a single
-# quote within a single quote string.
+# quote within a string in single quotes.
 
 function sanitize_unbound { sed -e 's/"/\\\\"/g' -e "s/'/./g" ; }
 
@@ -54,6 +54,9 @@ function hes_output {
 
     # Which way do we sanitize the strings?
     sanitize=sanitize_generic
+
+    # Do we need to write a per-record inline TTL?
+    inttl=''
 
 
 
@@ -89,6 +92,16 @@ function hes_output {
                 offset='        '
             fi
             ;;
+
+        bind )
+            if (( CREATEZONE )) ; then
+                echo "\$ORIGIN  ${HESDOMAIN}."
+                [[ "$TTL" ]] && echo "\$TTL     ${TTL}"
+                echo
+            else
+                [[ "$TTL" ]] && inttl="$TTL"
+            fi
+            ;;
     esac
 
 
@@ -118,7 +131,25 @@ function hes_output {
     #   need to repeat the TXT records twice: .user + .UID, .group + .GID...
 
 
-    # user and UID records first
+    # let's start with the SOA record
+
+    if [[ "$SOA" ]] ; then
+        echo "${COMMENT} SOA"
+
+        case $OUTPUTFMT in
+            bind )
+                printf $'@\t%s\tSOA\t%s %s ( ' "$inttl" "${SOA[@]:0:2}"
+                echo "${SOA[@]:2}" ")"
+                echo
+                echo "${COMMENT} NS"
+                printf $' \tNS\t%s\n' "${SOA[0]}"
+                ;;
+        esac
+        echo
+    fi
+
+
+    # user and UID records
     echo "${COMMENT} Users"
 
     for uid in ${!uid2user[@]} ; do
@@ -135,8 +166,8 @@ function hes_output {
                     printf $'local-data:\t\'%s.%s\tTXT\t"%s"\'\n' ${uid}.uid ${HESDOMAIN}${dot} "$line"
                     ;;
                 bind )
-                    printf $'%s\tIN\tTXT\t"%s"\n' ${user}.passwd "$line"
-                    printf $'%s\tIN\tCNAME\t%s\n' ${uid}.uid ${user}.passwd
+                    printf $'%s\t%s\tTXT\t"%s"\n' ${user}.passwd "$inttl" "$line"
+                    printf $'%s\t%s\tCNAME\t%s\n' ${uid}.uid "$inttl" ${user}.passwd
                     ;;
             esac
 
@@ -163,8 +194,8 @@ function hes_output {
                     printf $'local-data:\t\'%s.%s\tTXT\t"%s"\'\n' ${gid}.gid ${HESDOMAIN}${dot} "$line"
                     ;;
                 bind )
-                    printf $'%s\tTXT\t"%s"\n' ${group}.group "$line"
-                    printf $'%s\tCNAME\t%s\n' ${gid}.gid ${group}.group
+                    printf $'%s\t%s\tTXT\t"%s"\n' ${group}.group "$inttl" "$line"
+                    printf $'%s\t%s\tCNAME\t%s\n' ${gid}.gid "$inttl" ${group}.group
                     ;;
             esac
 
@@ -189,7 +220,7 @@ function hes_output {
                     printf $'local-data:\t\'%s.%s\tTXT\t"%s"\'\n' ${user}.grplist ${HESDOMAIN}${dot} "$line"
                     ;;
                 bind )
-                    printf $'%s\tIN\tTXT\t"%s"\n' ${user}.grplist "$line"
+                    printf $'%s\t%s\tTXT\t"%s"\n' ${user}.grplist "$inttl" "$line"
                     ;;
             esac
 
@@ -217,7 +248,7 @@ function hes_output {
                         printf $'local-data:\t\'%s.%s\tTXT\t"%s"\'\n' ${user}.filsys ${HESDOMAIN}${dot} "$line"
                         ;;
                     bind )
-                        printf $'%s\tIN\tTXT\t"%s"\n' ${user}.filsys "$line"
+                        printf $'%s\t%s\tTXT\t"%s"\n' ${user}.filsys "$inttl" "$line"
                         ;;
                 esac
 
