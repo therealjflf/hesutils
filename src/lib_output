@@ -49,9 +49,6 @@ function hes_output {
     # Offset to pretty-print the zone data
     offset=''
 
-    # Do we need a trailing dot?
-    dot=''
-
     # Which way do we sanitize the strings?
     sanitize=sanitize_generic
 
@@ -91,10 +88,9 @@ function hes_output {
 
             if (( CREATEZONE )) ; then
                 if (( BLOCKUPSTREAM )) ; then
-                    dot='.'
                     echo -e "${offset}local-zone: \"${HESDOMAIN}.\" static\n"
                 else
-                    echo -e "${offset}local-zone: \"${HESDOMAIN}\" transparent\n"
+                    echo -e "${offset}local-zone: \"${HESDOMAIN}.\" transparent\n"
                 fi
                 offset='        '
             fi
@@ -152,7 +148,7 @@ function hes_output {
                 ;;
 
             unbound )
-                printf $'local-data:\t\'%s\t%s\tSOA\t' ${HESDOMAIN}${dot} "$inttl"
+                printf $'local-data:\t\'%s.\t%s\tSOA\t' ${HESDOMAIN} "$inttl"
                 echo "${SOA[@]}""'"
                 ;;
 
@@ -182,8 +178,8 @@ function hes_output {
                     printf 'txt-record=%s.%s,"%s"\n' ${uid}.uid $HESDOMAIN "$line"
                     ;;
                 unbound )
-                    printf $'local-data:\t\'%s.%s\t%s\tTXT\t"%s"\'\n' ${user}.passwd ${HESDOMAIN}${dot} "$inttl" "$line"
-                    printf $'local-data:\t\'%s.%s\t%s\tTXT\t"%s"\'\n' ${uid}.uid ${HESDOMAIN}${dot} "$inttl" "$line"
+                    printf $'local-data:\t\'%s.%s.\t%s\tTXT\t"%s"\'\n' ${user}.passwd ${HESDOMAIN} "$inttl" "$line"
+                    printf $'local-data:\t\'%s.%s.\t%s\tTXT\t"%s"\'\n' ${uid}.uid ${HESDOMAIN} "$inttl" "$line"
                     ;;
                 bind )
                     printf $'%s\t%s\tTXT\t"%s"\n' ${user}.passwd "$inttl" "$line"
@@ -210,8 +206,8 @@ function hes_output {
                     printf 'txt-record=%s.%s,"%s"\n' ${gid}.gid $HESDOMAIN "$line"
                     ;;
                 unbound )
-                    printf $'local-data:\t\'%s.%s\t%s\tTXT\t"%s"\'\n' ${group}.group ${HESDOMAIN}${dot} "$inttl" "$line"
-                    printf $'local-data:\t\'%s.%s\t%s\tTXT\t"%s"\'\n' ${gid}.gid ${HESDOMAIN}${dot} "$inttl" "$line"
+                    printf $'local-data:\t\'%s.%s.\t%s\tTXT\t"%s"\'\n' ${group}.group ${HESDOMAIN} "$inttl" "$line"
+                    printf $'local-data:\t\'%s.%s.\t%s\tTXT\t"%s"\'\n' ${gid}.gid ${HESDOMAIN} "$inttl" "$line"
                     ;;
                 bind )
                     printf $'%s\t%s\tTXT\t"%s"\n' ${group}.group "$inttl" "$line"
@@ -237,7 +233,7 @@ function hes_output {
                     printf 'txt-record=%s.%s,"%s"\n' ${user}.grplist $HESDOMAIN "$line"
                     ;;
                 unbound )
-                    printf $'local-data:\t\'%s.%s\t%s\tTXT\t"%s"\'\n' ${user}.grplist ${HESDOMAIN}${dot} "$inttl" "$line"
+                    printf $'local-data:\t\'%s.%s.\t%s\tTXT\t"%s"\'\n' ${user}.grplist ${HESDOMAIN} "$inttl" "$line"
                     ;;
                 bind )
                     printf $'%s\t%s\tTXT\t"%s"\n' ${user}.grplist "$inttl" "$line"
@@ -265,7 +261,7 @@ function hes_output {
                         printf 'txt-record=%s.%s,"%s"\n' ${user}.filsys $HESDOMAIN "$line"
                         ;;
                     unbound )
-                        printf $'local-data:\t\'%s.%s\t%s\tTXT\t"%s"\'\n' ${user}.filsys ${HESDOMAIN}${dot} "$inttl" "$line"
+                        printf $'local-data:\t\'%s.%s.\t%s\tTXT\t"%s"\'\n' ${user}.filsys ${HESDOMAIN} "$inttl" "$line"
                         ;;
                     bind )
                         printf $'%s\t%s\tTXT\t"%s"\n' ${user}.filsys "$inttl" "$line"
