@@ -53,6 +53,7 @@ Options:
 
   -h                display this help message and exit
   -v                run in verbose mode
+  -t                test the configuration file and exit
   -d                don't print out the date in the output
   -c <filename>     use an alternative configuration file
   -p <filename>     use an alternative passwd file
@@ -87,6 +88,7 @@ declare -A filsys           # index: user name  ->  filsys record(s)
 
 declare -i verbose=0
 declare -i dateout=1
+declare -i testcfg=0
 
 
 
@@ -94,7 +96,7 @@ declare -i dateout=1
 # ------------------------------------------------------------------------------
 
 OPTIND=1
-optstring=":hvdc:p:g:"
+optstring=":hvtdc:p:g:"
 
 while getopts $optstring name ; do
     case $name in
@@ -102,6 +104,8 @@ while getopts $optstring name ; do
             exit 0
             ;;
         v)  verbose=1
+            ;;
+        t)  testcfg=1
             ;;
         d)  dateout=0
             ;;
@@ -181,7 +185,14 @@ fi
 
 (( verbose )) && echo "Checking the configuration file" >&2
 
-check_cfg_file || exit 1
+if check_cfg_file ; then
+    if (( testcfg )) ; then
+        echo "No error found in the configuration file: ${HESCFGFILE}" >&2
+        exit 0
+    fi
+else
+    exit 1
+fi
 
 
 
