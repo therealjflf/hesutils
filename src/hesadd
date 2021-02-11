@@ -78,7 +78,7 @@ fi
 # ------------------------------------------------------------------------------
 
 # The list of library files that we'll load later
-libfiles=( lib_check_cfg_file )
+libfiles=( lib_check_cfg )
 
 parsecmd=0
 cmd=""
@@ -160,7 +160,7 @@ else
     echo -e "         Using default values for everything.\n" >&2
 fi
 
-check_cfg_file      # exits in case of errors, checks and assigns default values
+check_cfg_file || exit 1
 
 
 

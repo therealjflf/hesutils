@@ -36,19 +36,21 @@
 function sanitize_binary_params {
 
     local i
+    local failed=0
     local def=$1
     shift
 
     for i in "${@}" ; do
-        case "x${!i}" in
-            x0)     eval ${i}=0 ;;
-            x1)     eval ${i}=1 ;;
-            x)      eval ${i}=$def ;;
-            *)      echo "ERROR: Invalid value for parameter ${i}: ${!i}" >&2
-                    exit 1 ;;
+        case "x${!i,,}" in
+            x0|xn|xno|xfalse)   eval ${i}=0 ;;
+            x1|xy|xyes|xtrue)   eval ${i}=1 ;;
+            x)                  eval ${i}=$def ;;
+            *)      echo "ERROR: Invalid value for binary parameter ${i}: ${!i}" >&2
+                    failed=1 ;;
         esac
-        #echo "${i}: ${!i}"
     done
+
+    return $failed
 }
 
 
@@ -58,12 +60,16 @@ function sanitize_binary_params {
 function check_integers {
 
     local i
+    local failed=0
+
     for i in "${@}" ; do
         if ! [[ ${!i} =~ ^[0-9]+$ ]] ; then
-            echo "ERROR: The option $i requires an integer value." >&2
-            exit 1
+            echo "ERROR: Invalid value for integer parameter $i: ${!i}" >&2
+            failed=1
         fi
     done
+
+    return $failed
 }
 
 
@@ -74,11 +80,15 @@ function check_integers {
 function check_directory {
 
     local dirname
+    local failed=0
+
     dirname="$(dirname "${!1}")"
     if ! [[ -d "$dirname" ]] ; then
-        echo "ERROR: The directory doesn't exist: ${1}=${!1}" >&2
-        exit 1
+        echo "ERROR: Directory doesn't exist: ${1}=${!1}" >&2
+        failed=1
     fi
+
+    return $failed
 }
 
 
@@ -87,6 +97,8 @@ function check_directory {
 # ------------------------------------------------------------------------------
 
 function check_cfg_file {
+
+    failed=0
 
     # Set some default values if empty
 
@@ -102,10 +114,10 @@ function check_cfg_file {
 
 
     # Check the binary options that default to 0
-    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSAUTO
+    sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSAUTO || failed=1
 
     # Check the binary options that default to 1
-    sanitize_binary_params 1 TRIMGECOS CREATEZONE BLOCKUPSTREAM BLOCKATHENA
+    sanitize_binary_params 1 TRIMGECOS CREATEZONE BLOCKUPSTREAM BLOCKATHENA || failed=1
 
 
     # The standard calls for LHS and RHS starting with leading dots. Those just get
@@ -118,12 +130,12 @@ function check_cfg_file {
 
 
     # Make sure that the UID and GID values are really integers
-    check_integers {UID,GID}{MIN,MAX}
+    check_integers {UID,GID}{MIN,MAX} || failed=1
 
     # Check the UID and GID values
     if (( UIDMIN > UIDMAX || GIDMIN > GIDMAX )) ; then
         echo "ERROR: UIDMAX / GIDMAX cannot be inferior to UIDMIN / GIDMIN." >&2
-        exit 1
+        failed=1
     fi
 
     if (( UIDMIN < 1000 )) ; then
@@ -141,18 +153,18 @@ function check_cfg_file {
     # HOMESEDEXPORT, HOMESEDMOUNT, NFSSERVER
 
     if [[ "$FSTYPE" && "$FSTYPE" != "NFS" && "$FSTYPE" != "AFS" && ! "$FSDEVICE" ]] ; then
-        echo "ERROR: The option FSDEVICE is mandatory when FSTYPE is neither NFS nor AFS." >&2
-        exit 1
+        echo "ERROR: The parameter FSDEVICE is mandatory when FSTYPE is neither NFS nor AFS." >&2
+        failed=1
     fi
 
     if [[ "$FSMAPFILE" && ! -r "$FSMAPFILE" ]] ; then
         echo "ERROR: The FSMAPFILE doesn't exist or is not readable: $FSMAPFILE" >&2
-        exit 1
+        failed=1
     fi
 
     if [[ "$FSCOMMAND" ]] && ! type "$FSCOMMAND" &> /dev/null ; then
         echo "ERROR: The FSCOMMAND doesn't exist, is not executable or is not in the PATH: $FSCOMMAND" >&2
-        exit 1
+        failed=1
     fi
 
 
@@ -163,7 +175,7 @@ function check_cfg_file {
         bind )              COMMENT=';' ;;
         * )
             echo "ERROR: The OUTPUTFMT is not a supported type: $OUTPUTFMT" >&2
-            exit 1
+            failed=1
     esac
 
     [[ "$TTL" ]] && check_integers TTL
@@ -174,18 +186,20 @@ function check_cfg_file {
     fi
 
     if [[ "$OUTPUTFMT" == bind && ! "$SOA" ]] && (( CREATEZONE )) ; then
-        echo "ERROR: SOA is mandatory when OUTPUTFMT=bind and CREATEZONE=1." >&2
-        exit 1
+        echo "ERROR: The parameter SOA is mandatory when OUTPUTFMT=bind and CREATEZONE=1." >&2
+        failed=1
     fi
 
     if [[ "${SOA}" ]] ; then
         if [[ ! "$(declare -p SOA 2>/dev/null)" =~ ^declare\ -a ]] ; then
-            echo "ERROR: SOA isn't an array." >&2
-            exit 1
+            echo "ERROR: The parameter SOA isn't an array." >&2
+            failed=1
         elif (( ${#SOA[@]} != 7 )) ; then
             echo "ERROR: Expected 7 SOA fields, found ${#SOA[@]}." >&2
-            exit 1
+            failed=1
         fi
     fi
+
+    return $failed
 }
 

@@ -67,7 +67,7 @@ Options:
 # ------------------------------------------------------------------------------
 
 # The list of library files that we'll load later
-libfiles=( lib_check_cfg_file
+libfiles=( lib_check_cfg
            lib_filsys
            lib_passwd_group
            lib_output )
@@ -180,7 +180,8 @@ else
 fi
 
 (( verbose )) && echo "Checking the configuration file" >&2
-check_cfg_file      # exits in case of errors, checks and assigns default values
+
+check_cfg_file || exit 1
 
 
 
