@@ -64,15 +64,9 @@ function hes_output {
 
     case $OUTPUTFMT in
         dnsmasq )
-            (( BLOCKATHENA )) && echo -e "local=/ns.athena.mit.edu/\n"
-
-            if (( CREATEZONE )) ; then
-                echo "auth-zone=${HESDOMAIN}"
-                [[ "$TTL" ]] && echo "auth-ttl=${TTL}"
-            else
-                (( BLOCKUPSTREAM )) && echo "local=/${HESDOMAIN}/"
-                [[ "$TTL" ]] && echo "local-ttl=${TTL}"
-            fi
+            (( BLOCKATHENA )) && echo "local=/ns.athena.mit.edu/"
+            (( BLOCKUPSTREAM )) && echo "local=/${HESDOMAIN}/"
+            [[ "$TTL" ]] && echo "local-ttl=${TTL}"
             echo
             ;;
 
@@ -142,11 +136,6 @@ function hes_output {
         echo "${COMMENT} SOA"
 
         case $OUTPUTFMT in
-            dnsmasq )
-                # auth-soa=<serial>[,<hostmaster>[,<refresh>[,<retry>[,<expiry>]]]]
-                printf $'auth-soa=%s,%s,%s,%s,%s\n' "${SOA[2]}" "${SOA[1]}" "${SOA[@]:3:3}"
-                ;;
-
             unbound )
                 printf $'local-data:\t\'%s.\t%s\tSOA\t' ${HESDOMAIN} "$inttl"
                 echo "${SOA[@]}""'"

@@ -168,6 +168,11 @@ function check_cfg_file {
 
     [[ "$TTL" ]] && check_integers TTL
 
+    if [[ "$OUTPUTFMT" == dnsmasq ]] ; then
+        CREATEZONE=0
+        SOA=
+    fi
+
     if [[ "$OUTPUTFMT" == bind && ! "$SOA" ]] && (( CREATEZONE )) ; then
         echo "ERROR: SOA is mandatory when OUTPUTFMT=bind and CREATEZONE=1." >&2
         exit 1
