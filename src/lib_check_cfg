@@ -176,19 +176,17 @@ function check_cfg_file {
         * )
             echo "ERROR: The OUTPUTFMT is not a supported type: $OUTPUTFMT" >&2
             failed=1
+            ;;
     esac
 
     [[ "$TTL" ]] && check_integers TTL
 
-    if [[ "$OUTPUTFMT" == dnsmasq ]] ; then
-        CREATEZONE=0
-        SOA=
-    fi
-
-    if [[ "$OUTPUTFMT" == bind && ! "$SOA" ]] && (( CREATEZONE )) ; then
-        echo "ERROR: The parameter SOA is mandatory when OUTPUTFMT=bind and CREATEZONE=1." >&2
-        failed=1
-    fi
+    case "x${CLASS}" in
+        xIN | xHS | x ) ;;
+        *)  echo "ERROR: Invalid record class: $CLASS" >&2
+            failed=1
+            ;;
+    esac
 
     if [[ "${SOA}" ]] ; then
         if [[ ! "$(declare -p SOA 2>/dev/null)" =~ ^declare\ -a ]] ; then
@@ -199,6 +197,25 @@ function check_cfg_file {
             failed=1
         fi
     fi
+
+
+    # Server-specific cases
+
+    case "$OUTPUTFMT" in
+        dnsmasq )
+            # parameters that don't apply to dnsmasq
+            CREATEZONE=0
+            CLASS=
+            SOA=
+            ;;
+
+        bind )
+            if (( CREATEZONE )) && [[ ! "$SOA" ]] ; then
+                echo "ERROR: The parameter SOA is mandatory when OUTPUTFMT=bind and CREATEZONE=1." >&2
+                failed=1
+            fi
+            ;;
+    esac
 
     return $failed
 }
