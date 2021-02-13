@@ -46,7 +46,11 @@ function parse_passwd {
 
     while IFS=: read -a passwd ; do
 
-        if (( ${passwd[2]} < UIDMIN || UIDMAX < ${passwd[2]} )) ; then
+        if (( ${#passwd[@]} != 7 )) ; then
+            (( verbose )) && echo -n "!" >&2
+            delayedwarnings+="WARNING: Invalid passwd entry: ${passwd[@]}\n"
+            continue
+        elif (( ${passwd[2]} < UIDMIN || UIDMAX < ${passwd[2]} )) ; then
             # user out of Hesiod range, nothing to do
             (( verbose )) && echo -n "x" >&2
             continue
@@ -84,7 +88,8 @@ function parse_passwd {
         primarygid[${passwd[0]}]=${passwd[3]}
         hesusers[${passwd[0]}]="$(IFS=: ; echo "${passwd[*]}")"
 
-    done < <(awk 'NF && !/^[:space:]*#/' "$HESPASSWDFILE")
+    done < <(awk 'NF && !/^[:space:]*#/ {print $0":"}' "$HESPASSWDFILE")
+    # the read misses the last field, if empty, without an extra colon
 
     (( verbose )) && echo >&2
     echo -en "$delayedwarnings" >&2
@@ -105,22 +110,31 @@ function parse_passwd {
 
 function parse_group {
 
+    local delayedwarnings=""
+
     (( verbose )) && echo -n "Processing the group file entries: " >&2
 
     while IFS=: read -a group ; do
 
-        # only deal with Hesiod groups
-        if (( GIDMIN <= ${group[2]} && ${group[2]} <= GIDMAX )) ; then
-            (( verbose )) && echo -n "." >&2
-        else
+        if (( ${#group[@]} != 4 )) ; then
+            delayedwarnings+="WARNING: Invalid group entry: ${group[@]}\n"
+            (( verbose )) && echo -n "!" >&2
+            continue
+        elif (( ${group[2]} < GIDMIN || GIDMAX < ${group[2]} )) ; then
+            # group out of Hesiod range, nothing to do
             (( verbose )) && echo -n "x" >&2
             continue
+        else
+            (( verbose )) && echo -n "." >&2
         fi
 
         # check the user list of the group, and add that group GID to the grplist
         # of the Hesiod users that we know of already
 
         while read -d, member ; do
+            # a side effect of the extra comma is the possibility of empty fields
+            [[ "$member" ]] || continue
+
             # only if we know the user already, and if it's not their primary group
             # (as we added that while parsing the passwd file)
             if [[ " ${!hesusers[@]} " =~ " $member " ]] ; then
@@ -130,7 +144,7 @@ function parse_group {
                 fi
             fi
         done < <(echo "${group[3]},")
-        # without the comma above ^ the read misses the last member...
+        # without the comma above ^ the read can miss the last member...
 
         # do we include the full member list?
         if (( FULLMEMBERLIST )) ; then
@@ -143,7 +157,11 @@ function parse_group {
         gid2group[${group[2]}]=${group[0]}
         hesgroups[${group[0]}]="$(IFS=: ; echo "${group[*]}")"
 
-    done < <(awk 'NF && !/^[:space:]*#/' "$HESGROUPFILE")
+    done < <(awk 'NF && !/^[:space:]*#/ {print $0":"}' "$HESGROUPFILE")
+    # the read misses the last field, if empty, without an extra colon
+
+    (( verbose )) && echo >&2
+    echo -en "$delayedwarnings" >&2
 
     (( verbose )) && echo -e "\n  --> ${#hesgroups[@]} Hesiod groups" >&2 || true
 }
