@@ -183,7 +183,7 @@ In other words, the Hesutils allow you to take a subset of the current user and 
 
 Essentially ``hesgen`` is a database translation tool.
 
-Additionally, a second tool called ``hesadd`` wraps around ``useradd`` and ``groupadd``. As described in the Hesutils `model of operations <hes_model.rst>`_, UIDs and GIDs eligible for translation to Hesiod need to be within certain ranges. This wrapper makes sure that the freshly-created users and groups are within those ranges.
+Additionally, a second tool called ``hesadd`` wraps around ``useradd`` and ``groupadd``. As described in the Hesutils `model of operations <hes_model.rst>`__, UIDs and GIDs eligible for translation to Hesiod need to be within certain ranges. This wrapper makes sure that the freshly-created users and groups are within those ranges.
 
 The Hesutils are not the only way to start using Hesiod, but for many people and a lot of use cases this will be the easiest and fastest way.
 
@@ -208,12 +208,12 @@ Now and then I read of other people having deployed it and being very happy. I b
 Links and additional documentation
 ----------------------------------
 
-I have already mentioned the two reference papers in `Is there a Hesiod standard?`_.
+I have already mentioned the two reference papers in `Is there a Hesiod standard?`__.
 
 
 A few blog articles have been written in recent years (more recently than the reference papers, at any rate) about Hesiod. For example:
 
-- `https://simonwo.net/technical/hesiod/`_
-- `https://jpmens.net/2012/06/28/hesiod-a-lightweight-directory-service-on-dns/`_
-- `https://soylentnews.org/meta/article.pl?sid=15/07/13/0255214`_
+- `<https://simonwo.net/technical/hesiod/>`__
+- `<https://jpmens.net/2012/06/28/hesiod-a-lightweight-directory-service-on-dns/>`__
+- `<https://soylentnews.org/meta/article.pl?sid=15/07/13/0255214>`__
 
