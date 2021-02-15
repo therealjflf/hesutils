@@ -6,11 +6,11 @@ Hesutils and the Hesiod name service
 What is the Hesiod name service?
 --------------------------------
 
-Hesiod is a mechanism through which information of various types (including user and group names) is distributed via DNS servers to network clients. As such it is a name service (or `directory service <https://en.wikipedia.org/wiki/Directory_service>`_).
+Hesiod is a mechanism through which information of various types (including user and group names) is distributed via DNS servers to network clients. As such it is a name service (or `directory service <https://en.wikipedia.org/wiki/Directory_service>`__).
 
-Hesiod was designed and implemented by the MIT in the 1980s as part of `Project Athena <https://en.wikipedia.org/wiki/Project_Athena>`_, to provide directory services to the MIT campus workstations.
+Hesiod was designed and implemented by the MIT in the 1980s as part of `Project Athena <https://en.wikipedia.org/wiki/Project_Athena>`__, to provide directory services to the MIT campus workstations.
 
-Its goals are broadly similar to those of `NIS <https://en.wikipedia.org/wiki/Network_Information_Service>`_ (created at about the same time at Sun Microsystems) and `LDAP <https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol>`_ (created a decade later as a simplification of the `X.500 <https://en.wikipedia.org/wiki/X.500>`_ directory access protocol). In the end the actual design choices and protocols of those three turned out to be very different from one another, though.
+Its goals are broadly similar to those of `NIS <https://en.wikipedia.org/wiki/Network_Information_Service>`__ (created at about the same time at Sun Microsystems) and `LDAP <https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol>`__ (created a decade later as a simplification of the `X.500 <https://en.wikipedia.org/wiki/X.500>`_ directory access protocol). In the end the actual design choices and protocols of those three turned out to be very different from one another, though.
 
 
 
@@ -50,12 +50,12 @@ There are a lot of very good reasons for using Hesiod over alternatives like NIS
 The key reason for using Hesiod is really its simplicity. The dominant directory service at that point in time is LDAP, and its most common implementation on Linux systems is OpenLDAP. A general opinion that I (the Hesutils author) hold and have heard from colleagues again and again over the years is that OpenLDAP is overly complicated, suffers from very poor design choices that seriously affect usability, and is overkill in a lot of cases. Hesiod is a much simpler solution, that's faster and easier to deploy and manage.
 
 
-A good description of that situation is given in this `blog post <https://soylentnews.org/meta/article.pl?sid=15/07/13/0255214>`_ (`archive.org cache <https://web.archive.org/web/20190922024716/https://soylentnews.org/meta/article.pl?sid=15/07/13/0255214>`_).
+A good description of that situation is given in this `blog post <https://soylentnews.org/meta/article.pl?sid=15/07/13/0255214>`__ (`archive.org cache <https://web.archive.org/web/20190922024716/https://soylentnews.org/meta/article.pl?sid=15/07/13/0255214>`__).
 
 
-Hesiod's simplicity was known from the very beginning, as this tidbit from `Dyer's 1988 paper <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.37.8519>`_ (`local copy <PDF/10.1.1.37.8519.pdf>`_ of the PDF file) shows:
+Hesiod's simplicity was known from the very beginning, as this tidbit from `Dyer's 1988 paper <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.37.8519>`__ (`local copy <PDF/10.1.1.37.8519.pdf>`__ of the PDF file) shows:
 
-> A measure of how successful Hesiod has been in its deployment over the past six months is how infrequently problems have appeared. For the most part, applications make Hesiod queries and receive answers with millisecond delays. Today, the Hesiod database for Project Athena contains almost three megabytes of data: roughly 9500 /etc/passwd entries, 10000 /etc/group entries, 6500 file system entries and 8600 post office records. There are three primary Hesiod nameservers distributed across the campus network.
+    A measure of how successful Hesiod has been in its deployment over the past six months is how infrequently problems have appeared. For the most part, applications make Hesiod queries and receive answers with millisecond delays. Today, the Hesiod database for Project Athena contains almost three megabytes of data: roughly 9500 /etc/passwd entries, 10000 /etc/group entries, 6500 file system entries and 8600 post office records. There are three primary Hesiod nameservers distributed across the campus network.
 
 
 
@@ -66,7 +66,7 @@ There are also a few reasons for which Hesiod might not be the best solution for
 
 - Just like NIS, it's a Linux- and BSD-only mechanism. There is no support for it in Microsoft Windows or Apple OSX (or likely anything else). If you require support from those OS then you're probably already using LDAP (or its variant Active Directory) anyway.
 
-- As the data is sent via DNS, Hesiod is affected by the limitations and security problems of the DNS protocol. In real life those can be mitigated out but you need to be aware of them when implementing a Hesiod infrastructure. For further information see `Passwords and security concerns <hes_sec.rst>`_.
+- As the data is sent via DNS, Hesiod is affected by the limitations and security problems of the DNS protocol. In real life those can be mitigated out but you need to be aware of them when implementing a Hesiod infrastructure. For further information see `Passwords and security concerns <hes_sec.rst>`__.
 
 - Some Linux distributions have decided that Hesiod wasn't used anymore (possibly because there isn't any complaint from those using it), and have started disabling NSS support for Hesiod in their glibc build. You will need to check whether your preferred distribution supports it, and if not you may want to ask for support to be brought back in.
 
@@ -78,10 +78,10 @@ Is there a Hesiod standard?
 There isn't a real Hesiod standard per se, apart from how it's implemented and used at MIT. The two core documents that describe it are:
 
 - "Hesiod Name Service" by Steven P. Dyer and Felix S. Hsu, in Project Athena Technical Plan, 1987.
-  Available from `The Athena Technical Plan <https://web.mit.edu/Saltzer/www/publications/atp.html>`_ (`local copy <PDF/e.2.3.pdf>`_ of the PDF file)
+  Available from `The Athena Technical Plan <https://web.mit.edu/Saltzer/www/publications/atp.html>`__ (`local copy <PDF/e.2.3.pdf>`__ of the PDF file)
 
 - "The Hesiod Name Server" by Stephen P. Dyer, in Proceedings of the USENIX Winter Technical Conference, 1988.
-  Available through `CiteSeerX <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.37.8519>`_ (`local copy <PDF/10.1.1.37.8519.pdf>`_ of the PDF file)
+  Available through `CiteSeerX <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.37.8519>`__ (`local copy <PDF/10.1.1.37.8519.pdf>`__ of the PDF file)
 
 
 There are some differences between the two. The first one is essentially the original design, while the second one is how it was implemented. So while the first one is still an interesting read and provides additional details, the second one is what serves as reference. 
@@ -91,11 +91,11 @@ When writing the Hesutils, the client behaviour on Linux was the absolute refere
 
 The following maintained packages represent the current state of Hesiod support on Linux:
 
-- The GNU libc (for user and group records): `https://sourceware.org/git?p=glibc.git;a=tree;f=hesiod;hb=HEAD`_ and other files
+- The GNU libc (for user and group records): `<https://sourceware.org/git?p=glibc.git;a=tree;f=hesiod;hb=HEAD>`__ and other files
 
-- The autofs kernel automounter (for FILSYS records): `https://git.kernel.org/pub/scm/linux/storage/autofs/autofs.git/tree/modules`_
+- The autofs kernel automounter (for FILSYS records): `<https://git.kernel.org/pub/scm/linux/storage/autofs/autofs.git/tree/modules>`__
 
-- The `hesiod` package, containing a C client library and a tool to check the servers: `https://github.com/achernya/hesiod`_
+- The ``hesiod`` package, containing a C client library and a tool to check the servers: `<https://github.com/achernya/hesiod>`__
 
 
 
@@ -117,14 +117,12 @@ Hesiod defines:
 So Hesiod is essentially a database format and query syntax over DNS, but not a protocol. As a corollary there isn't really such a thing as a Hesiod server: it's just a DNS server with the right data in the right way. Being a Hesiod server is a role, rather than a specific piece of software.
 
 
-The DNS RFCs specify a generic record type, called a TXT record. TXT records were originally added to the spec for the very purpose of supporting Hesiod (together with the HS class). Since then TXT records have been used for everything and anything, in particular various forms of email sender validation. While there have been attempts to structure of the information they contain (`RFC 1464 <https://tools.ietf.org/html/rfc1464>`_), it goes a bit against the basic concept of a TXT record: store and serve unstructured or arbitrarily-structured data that doesn't fit in any other record type.
-
-Hesiod DNS records are all TXT records, and the structure of the data within those TXT records is defined by Hesiod.
+The DNS RFCs specify a generic record type, called a TXT record. TXT records were originally added to the spec for the very purpose of supporting Hesiod (together with the HS class). Since then TXT records have been used for everything and anything, in particular various forms of email sender validation. While there have been attempts to structure of the information they contain (`RFC 1464 <https://tools.ietf.org/html/rfc1464>`__), Hesiod predates those and the structure of the data within the TXT records is defined by Hesiod.
 
 And that's it! There's no low-level protocol, no on-wire bitstream, no endianness, etc. All of that is dealt with by the underlying DNS protocol.
 
 
-On the client side, applications need to support Hesiod as a source of information. At the time of writing there is support in the glibc NSS code for user, group and service requests. Some email clients may have implemented support for obtaining account information at some point in the past, but the current state is unknown. The original implementation of Hesiod at MIT provided much more information than this, as described in the historical documents. However this was not fully replicated on Linux or BSD.
+On the client side, applications need to support Hesiod as a source of information. At the time of writing there is support in the glibc NSS code for user, group, service and protocol requests. Some email clients may have implemented support for obtaining mail account information at some point in the past, but the current state is unknown. The original implementation of Hesiod at MIT provided much more information than this, as described in the historical documents. However this was not fully replicated on Linux or BSD.
 
 
 
@@ -185,9 +183,9 @@ In other words, the Hesutils allow you to take a subset of the current user and 
 
 Essentially ``hesgen`` is a database translation tool.
 
-Additionally, a second tool called ``hesadd`` wraps around ``useradd`` and ``groupadd``. As described in the Hesutils `model of operations <hes_model.rst>`_, uids and gids eligible for translation to Hesiod need to be within certain ranges. This wrapper makes sure that the freshly-created users and groups are within those ranges.
+Additionally, a second tool called ``hesadd`` wraps around ``useradd`` and ``groupadd``. As described in the Hesutils `model of operations <hes_model.rst>`_, UIDs and GIDs eligible for translation to Hesiod need to be within certain ranges. This wrapper makes sure that the freshly-created users and groups are within those ranges.
 
-The Hesutils are not the only way to start using Hesiod, but for most people and a lot of use cases this will be the easiest and fastest way.
+The Hesutils are not the only way to start using Hesiod, but for many people and a lot of use cases this will be the easiest and fastest way.
 
 
 
