@@ -26,6 +26,22 @@
 
 
 
+# Helper functions
+# ------------------------------------------------------------------------------
+
+# The GECOS field may contain some things that need to be escaped:
+# - double quotes, as all TXT record payloads are double-quoted;
+# - colons which aren't field separators.
+#
+# Also, they need to be double-escape as one quote backslash will be eaten by
+# the shell between here and the output.
+#
+# DNS server-specific sanitization is done in lib_output.
+
+function sanitize_gecos { sed -e 's/"/\\\\"/g' -e 's/:/\\\\:/g' ; }
+
+
+
 # Parse /etc/passwd
 # ------------------------------------------------------------------------------
 
@@ -64,7 +80,7 @@ function parse_passwd {
             (( verbose )) && echo -n "." >&2
         fi
 
-        # Some distros don't add a given user to its own group in /etc/passwd...
+        # Some distros don't add a given user to their own group in /etc/passwd...
         # (I'm looking at you Debian and derivatives!)
         # We need to add that information in 2 different places:
         # 1. the list of groups a user is a member of
@@ -77,11 +93,15 @@ function parse_passwd {
         # records are requested), so we do both at the same time.
         filsys_voodoo
 
-        # If needed, do some cleanup.
         # We need to pretend the account is disabled. It's complicated.
         passwd[1]="*"
-        # trim the GECOS field if required
-        (( TRIMGECOS )) && passwd[4]=
+
+        # Trim the GECOS field if required, otherwise sanitize it
+        if (( TRIMGECOS )) ; then
+            passwd[4]=
+        else
+            passwd[4]="$(echo "${passwd[4]}" | sanitize_gecos)"
+        fi
 
         # and finally, store that user's data
         uid2user[${passwd[2]}]="${passwd[0]}"

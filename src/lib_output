@@ -26,18 +26,15 @@
 
 
 
-# Text utilities
+# Helper functions
 # ------------------------------------------------------------------------------
 
-# Make sure any double quote within a string is properly escaped.
-# It needs to be double-escaped as one of the backslashes will be lost later.
+# On top of the normal GECOS sanitization done in lib_passwd_group, unbound
+# needs all single quotes removed. The entire TXT record has to be passed in
+# single quotes, and you can't escape a single quote within a string in single
+# quotes.
 
-function sanitize_generic { sed -e 's/"/\\\\"/g' ; }
-
-# Unbound needs the single quotes removed too, as you can't escape a single
-# quote within a string in single quotes.
-
-function sanitize_unbound { sed -e 's/"/\\\\"/g' -e "s/'/./g" ; }
+function sanitize_unbound { sed -e "s/'/./g" ; }
 
 
 
@@ -209,7 +206,7 @@ function hes_output {
     offset=''
 
     # Which way do we sanitize the strings?
-    sanitize=sanitize_generic
+    sanitize=cat
 
     # Do we need to write a per-record inline TTL?
     inttl=''
