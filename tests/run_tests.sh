@@ -52,12 +52,12 @@
 # The test are ran by calling this script with the list of test files:
 #   $ ./run_tests *.test
 #
-# For each test, the script might create additional files in the same directory
-# as the test file:
+# For each test, the script creates additional files in the same directory as
+# the test file:
 #
-# <testfile>.log    always                     log of the steps of the test
-# <testfile>.out    only if OUTFILE defined    command stdout, to compare
-# <testfile>.err    only if ERRFILE defined    command stderr, to compare
+# <testfile>.log    log messages from this test script
+# <testfile>.out    test command stdout
+# <testfile>.err    test command stderr
 #
 # All file paths contained in the test file are relative to the location of the
 # test file, not the current directory nor the path of the script.

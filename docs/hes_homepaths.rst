@@ -19,7 +19,7 @@ If we translate it directly to a Hesiod record, we get this::
 
 Here comes the first problem: *the home path may not be the same on the client systems*!
 
-There can be multiple causes for that. The most common one is that the homes are shared to all clients via a network filesystem like NFS, and the mount point on the client is not the same than on the management system. So user accounts are created with the management's view of the home directories, which doesn't work anymore on the clients.
+There can be multiple causes for that. The most common one is that the homes are shared to all clients via a network filesystem like NFS, and the mount point on the client is not the same as on the management system. So user accounts are created with the management's view of the home directories, which doesn't work anymore on the clients.
 
 This means that the Hesiod ``passwd`` record may need to contain a home path that's different from the entry in the management's ``/etc/passwd`` file. This may look like this::
 
@@ -39,7 +39,7 @@ Altogether, there are three separate home paths involved in the Hesutils model:
 
 - the **passwd path**, in the ``/etc/passwd`` entry for a user on the management system;
 
-- the **export path**, used in FILSYS records only;
+- the **export path** on the network FS server for that user, used in FILSYS records only;
 
 - and the **mount path**, which is the home path of the user on the client system.
 

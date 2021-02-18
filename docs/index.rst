@@ -21,22 +21,21 @@ Using the Hesutils tools
 - The Hesutils `configuration file <hes_conffile.rst>`_
 - ``Hesadd``: `user and group management <hesadd.rst>`_
 - ``Hesgen``: `generating the Hesiod DNS records <hesgen.rst>`_
+- Deviations and `implementation choices <hes_impl.rst>`_
 
 
 DNS server configuration
 ------------------------
 
-The following pages provide examples of how to configure various popular DNS servers for use as Hesiod servers:
-
 - `Dnsmasq <srv_dnsmasq.rst>`_
 - `Unbound <srv_unbound.rst>`_
 - `Bind 9 <srv_bind9.rst>`_
+- `Chosing a TTL <srv_ttl.rst>`_ for Hesiod records
 
 
 Hesiod client configuration
 ---------------------------
 
-- `Chosing a TTL <client_ttl.rst>`_ for Hesiod records
 - Hesiod on `Linux clients <client_linux.rst>`_
 - Hesiod on `BSD clients <client_bsd.rst>`_
 

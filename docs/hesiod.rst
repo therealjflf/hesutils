@@ -108,7 +108,7 @@ As opposed to, say, LDAP, Hesiod doesn't define a network communication protocol
 
 Hesiod defines:
 
-- types of information available as DNS records;
+- the types of information available as DNS records;
 
 - how to select a specific piece of information through the domain of the DNS request (request encoding);
 
@@ -165,10 +165,10 @@ An additional, optional type of record called ``filsys`` can provide per-user ho
 The FILSYS record for ``joe`` may look like this::
 
     ; Filesystems
-    joe.filsys          IN  TXT    "NFS /export/home/joe nfssrv rw /mnt/nfs/home/joe"
+    joe.filsys          IN  TXT    "NFS /export/home/joe nfssrv rw /home/joe"
 
 
-The original Hesiod deployment at MIT contained many more record types than this. One could get details like print spooler information, preferred mail servers, etc. Support for such requests need to be implemented directly by the software that needs it. The glibc NSS code also supports using Hesiod for ``/etc/services`` and ``/etc/protocols`` entries (in a different format), but converting that information isn't supported by the Hesutils.
+The original Hesiod deployment at MIT contained many more record types than this. One could get details like print spooler information, preferred mail servers, etc. Support for such requests need to be implemented directly by the software that needs it. The glibc NSS code also supports using Hesiod for ``/etc/services`` and ``/etc/protocols`` entries (in a different format), but converting that information isn't supported yet by the Hesutils.
 
 
 
@@ -208,7 +208,7 @@ Now and then I read of other people having deployed it and being very happy. I b
 Links and additional documentation
 ----------------------------------
 
-I have already mentioned the two reference papers in `Is there a Hesiod standard?`__.
+I have already mentioned the two reference papers in `Is there a Hesiod standard?`_.
 
 
 A few blog articles have been written in recent years (more recently than the reference papers, at any rate) about Hesiod. For example:

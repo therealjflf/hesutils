@@ -64,14 +64,14 @@ Once we have the guarantee that we received unmodified records from the DNS serv
 
 When a user logs in, the system performs two separate tasks:
 
-- user identification (who are you?);
+- user authorization (who are you?);
 
 - and user authentication (how can you prove that you are who you say you are?).
 
 Most often this comes under the guise of a login name and a password.
 
 
-There are other elements to user identification, such as group memberships, home directory, shell, etc. All of those are provided in Hesiod records, so the first part, identification, is taken care of. But what about authentication?
+There are other elements to user authorization, such as group memberships, home directory, shell, etc. All of those are provided in Hesiod records, so the first part, authorization, is taken care of. But what about authentication?
 
 
 Password logins
@@ -84,9 +84,9 @@ As it turned out, this didn't cut it. Increasing computing power made it easy to
 With the original setup, the password hash would be transmitted via Hesiod with the rest of the ``passwd`` entry. That made *everybody's* hashes visible to an attacker sniffing the wire, which was immediately understood to be a major security weakness. So the good people at MIT's Project Athena came up with another tool to deal with authentication: `Kerberos <https://en.wikipedia.org/wiki/Kerberos_(protocol)>`_.
 
 
-Today passwords are no longer present in ``/etc/password``. Moreover, passwords are no longer the only form of authentication. `Multi-factor authentication <https://en.wikipedia.org/wiki/Multi-factor_authentication>`_ is becoming a requirement in many larger sites, and hardware security dongles are fairly common. Hesiod has absolutely no way of representing such autentication mechanisms right now. We need something else. And while it has its defaults, Kerberos is one of the possible solutions.
+Today passwords are no longer present in ``/etc/password``. Moreover, passwords are no longer the only form of authentication. `Multi-factor authentication <https://en.wikipedia.org/wiki/Multi-factor_authentication>`_ is becoming a requirement in many larger sites, and hardware security dongles are fairly common. Hesiod has absolutely no way of representing such authentication mechanisms right now. We need something else. And while it has its defaults, Kerberos is one of the possible solutions (albeit not -- yet? -- for MFA).
 
-As for the Hesutils, ``hesgen``  won't even try to insert the password hashes back into the ``passwd`` records -- in fact they will *always* overwrite the second field with ``*``, telling the client systems that password logins for that user are disabled and they should authenticate using a different method. So you need another authentication mechanism.
+As for the Hesutils, ``hesgen``  won't even try to insert the password hashes back into the ``passwd`` records -- in fact it will *always* overwrite the second field with ``*``, telling the client systems that password logins for that user are disabled and they should authenticate using a different method. So you need another authentication mechanism.
 
 The bottom line is: kerberize.
 
