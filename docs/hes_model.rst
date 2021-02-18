@@ -3,6 +3,38 @@ The Hesutils model of operations
 ================================
 
 
+Typical use case
+----------------
+
+The Hesutils were designed for a specific use case: translating to Hesiod records the user and group information that already exists on a Linux or UNIX system.
+
+
+In that use case:
+
+- user and group entries are managed as regular accounts on the management system;
+
+- the resulting user and group databases are translated to Hesiod records by ``hesgen``;
+
+- those records are published on a DNS server for use by client systems.
+
+
+The key point here is that user and group information must already exist on the management system. The Hesutils don't provide commands to add or remove users or groups directly from the Hesiod records.
+
+
+This use case applies to a number of common small- to medium-scale scenarios, for example:
+
+- exporting a system's account to local VMs;
+
+- small clusters of all sorts, where a login node acts as access point for a group of client system.
+
+
+This can be extended to more complex deployments, as long as all accounts are managed on a single machine (which may or may not be accessible to the end users).
+
+
+
+Model of operations
+-------------------
+
 The general model of operations of the Hesutils can be summarized in a picture:
 
 .. image::  images/hes_model1.png
@@ -16,11 +48,11 @@ Generation of Hesiod records
 
 ``Hesgen`` takes as input the standard ``/etc/passwd`` and ``/etc/group`` files and generates Hesiod records based on that information.
 
-The users and groups to be translated to Hesiod records are identified by their UID and GID. The configuration file include parameters that define the Hesiod ranges, and only users and groups whose UIDs and GIDs are within those ranges will be translated to Hesiod record.
+The users and groups to be translated to Hesiod records are identified by their UID and GID. The configuration file includes parameters that define the Hesiod ranges, and only users and groups whose UIDs and GIDs are within those ranges will be translated to Hesiod record.
 
 The default Hesiod user and group ranges are both ``[5000-5999]``. ``Hesgen`` will refuse to translate system entries (UID or GID below 1000).
 
-By default ``hesgen`` will read the system-wide ``/etc/passwd`` and ``/etc/group`` files. It is possible to override this and provide input files in different paths. This is useful in various situations, for example translating entries from hand-edited files. Another use case is generating the Hesiod records on an isolated DNSSEC machine used to sign zones.
+By default ``hesgen`` will read the system-wide ``/etc/passwd`` and ``/etc/group`` files. It is possible to override this and provide input files in different paths. This is useful in various situations, for example translating entries from hand-edited files. Another use case is generating the Hesiod records on an isolated DNSSEC machine used to sign zones, separate from the user management system.
 
 Hesiod records need to be regenerated after each change to entries within the Hesiod ranges.
 
