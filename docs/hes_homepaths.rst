@@ -1,6 +1,6 @@
 
-The problem of the multiple home paths
-======================================
+The problem with the multiple home paths
+========================================
 
 When generating Hesiod ``passwd`` and ``FILSYS`` records, an interesting problem arises: the possible existence of different home paths.
 
@@ -8,6 +8,8 @@ When generating Hesiod ``passwd`` and ``FILSYS`` records, an interesting problem
 Let's have a look at an entry from ``/etc/passwd`` on the management system::
 
     joe:x:5000:5000:,,,:/home/joe:/bin/bash
+                        ^^^^^^^^^
+                        home path
 
 The 6th field, just before the shell, is the user's home directory: ``/home/joe``. It's assumed to exist and be valid on that local system.
 
@@ -15,6 +17,8 @@ The 6th field, just before the shell, is the user's home directory: ``/home/joe`
 If we translate it directly to a Hesiod record, we get this::
 
     joe.passwd      TXT    "joe:x:5000:5000:,,,:/home/joe:/bin/bash"
+                                                ^^^^^^^^^
+                                    home path on the management system
 
 
 Here comes the first problem: *the home path may not be the same on the client systems*!
@@ -24,6 +28,8 @@ There can be multiple causes for that. The most common one is that the homes are
 This means that the Hesiod ``passwd`` record may need to contain a home path that's different from the entry in the management's ``/etc/passwd`` file. This may look like this::
 
     joe.passwd      TXT    "joe:x:5000:5000:,,,:/nfs/home/joe:/bin/bash"
+                                                ^^^^^^^^^^^^^
+                                       home path on the client systems
 
 
 Then, an NFS mount (or any other network FS) means an export path as well as a mount path. Very often the whole home directory root will be mounted at boot on the clients via ``fstab`` or ``systemd-mount``, and in that case there's nothing to worry about. But if you want to have automounting based on FILSYS records, there's a third possible path: the export path for that user.
@@ -31,8 +37,12 @@ Then, an NFS mount (or any other network FS) means an export path as well as a m
 If we have a look at a sample FILSYS record, we can see two different paths::
 
     joe.filsys      TXT    "NFS /export/home/joe nfssrv rw /nfs/home/joe"
+                                ^^^^^^^^^^^^^^^^           ^^^^^^^^^^^^^
+                                NFS export path           NFS mount point
 
 The first one is the export path on the NFS server, and the second one is the mount point on the client system.
+
+To avoid making things even more complex, we'll assume that for per-user FILSYS records the NFS mount point is the home path on the client system. It may not be, in which case you would need to write your own custom FILSYS records.
 
 
 Altogether, there are three separate home paths involved in the Hesutils model:
@@ -41,7 +51,7 @@ Altogether, there are three separate home paths involved in the Hesutils model:
 
 - the **export path** on the network FS server for that user, used in FILSYS records only;
 
-- and the **mount path**, which is the home path of the user on the client system.
+- and the **mount path**, which is both the home path of the user on the client system, and the mount point of the FILSYS record for that user.
 
 
 The *passwd path* and the *mount path* are always present, regardless of whether FILSYS records are generated. The *export path* only exists in FILSYS records.
@@ -61,7 +71,7 @@ At the other extreme, all three paths may be different:
     :align: center
 
 
-The Hesutils provide powerful, sophisticated, multi-layered, flexible, software-defined, user-extensible and grossly overkill mechanisms of home path modifications. Those can generate the export and mount paths from the home paths, or replace them with arbitrary values.
+The Hesutils provide powerful, sophisticated, multi-layered, flexible, software-defined, user-extensible and grossly overkill mechanisms of home path modification. Those can generate the export and mount paths by modifying the passwd paths, or replace them with arbitrary values.
 
 As the non-FILSYS case is a slightly simpler version of the FILSYS case, both are documented in `FILSYS records <hes_filsys.rst>`__.
 
