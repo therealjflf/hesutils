@@ -86,13 +86,27 @@ function parse_external_filsys {
         # skip empty lines and comments
         ( ! (( ${#record[@]} )) || [[ ${record[0]} =~ ^# ]] ) && continue
 
-        # if we have a user-specific record, grab the mount path
-        # if there are more than 1 user-specific records, last one wins
+        # Check that we have the expected number of fields
+        # No FILSYS -> 2 fields
+        # FILSYS    -> 5 (AFS or generic) or 6 (NFS)
+        case ${#record[@]} in
+            2|5|6)  ;;
+            *)      delayedwarnings+="WARNING: Invalid FILSYS record: ${record[@]}\n"
+                    continue
+                    ;;
+        esac
 
-        if [[ "${record[0]}" == '*' ]] || [[ "${record[0]}" == "${passwd[0]}" ]] ; then
+        # Only overwrite the mount path in the passwd record if the FILSYS
+        # record is specific to that user, not a generic one.
+        # If multiple records are found, last user-specific one wins for the
+        # mount path, and last one wins for the FILSYS record.
+
+
+        if [[ "${record[0]}" == "${passwd[0]}" ]] ; then
             mountpath="${record[-1]}"
-            # and copy the record over into filsys
-            # first field (user name or "*") is skipped
+            (( FILSYS )) && filsys[${passwd[0]}]="${record[@]:1}"
+
+        elif [[ "${record[0]}" == '*' ]] ; then
             (( FILSYS )) && filsys[${passwd[0]}]="${record[@]:1}"
         fi
     done
