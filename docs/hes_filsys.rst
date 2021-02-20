@@ -54,9 +54,9 @@ This means that an NFS FILSYS record can be represented in two different ways, t
     joe.filsys          TXT    "NFS /export/home/joe nfssrv rw /mnt/nfs/home/joe"
     joe.filsys          TXT    "nfs nfssrv:/export/home/joe rw /mnt/nfs/home/joe"
 
-In the generic case, the device contains both the NFS server and the export path.
+In the generic record, the device contains both the NFS server and the export path.
 
-Selection of the record format in `<The automatic FILSYS records>`_ is done via the ``FSTYPE``: if it's "NFS" (all caps), then it's the classic path. If it's "nfs" or "nfs4", then it's the generic format.
+Selection of the record format in `The automatic FILSYS records`_ is done via the ``FSTYPE``: if it's "NFS" (all caps), then it's the classic path. If it's "nfs" or "nfs4", then it's the generic format.
 
 
 
@@ -72,7 +72,7 @@ Currently this is controlled by two options:
 
 Both of those are simply ``sed`` scripts (the ``-e`` parameter). Using them is pretty straightforward.
 
-If either of them is not defined, then the respective path stays identical to the passwd path
+If either of them is not defined, then the respective path stays identical to the passwd path.
 
 
 Non-FILSYS example:
@@ -160,7 +160,7 @@ Without FILSYS
 
 When no FILSYS records are required, ``hesgen`` will ignore generic (``*``) records. Only user-specific records will be considered.
 
-Full FILSYS records are not required in that case, so the records can be shorted to this format::
+Full FILSYS records are not required in that case, so the records can be shortened to this format::
 
     <user name>  <mount path>
 
@@ -172,7 +172,7 @@ With FILSYS
 
 When FILSYS records are required, ``hesgen`` will accept both user-specific and generic records.
 
-In both cases, the record obtained will overwrite the current existing FILSYS record for that user.
+In both cases, the record obtained will overwrite the current existing FILSYS record for that user. If the record contains only one field (username or ``*``), then the FILSYS record for that user is cleared entirely.
 
 If it's a user-specific record, then the mount path from the record overwrites the existing mount path for that user. If it's a generic record, then the existing mount path stays the same.
 

@@ -86,28 +86,33 @@ function parse_external_filsys {
         # skip empty lines and comments
         ( ! (( ${#record[@]} )) || [[ ${record[0]} =~ ^# ]] ) && continue
 
-        # Check that we have the expected number of fields
-        # No FILSYS -> 2 fields
-        # FILSYS    -> 5 (AFS or generic) or 6 (NFS)
-        case ${#record[@]} in
-            2|5|6)  ;;
-            *)      delayedwarnings+="WARNING: Invalid FILSYS record: ${record[@]}\n"
-                    continue
-                    ;;
-        esac
+        # There's a number of cases that we have to support. Let's sort them by
+        # the number of fields in the record.
+        # 1 ->  clear the FILSYS record
+        # 2 ->  overwrite the mount path
+        # 5 ->  AFS or generic FILSYS, overwrite FILSYS + maybe mount path
+        # 6 ->  NFS FILSYS, overwrite FILSYS + maybe mount path
 
-        # Only overwrite the mount path in the passwd record if the FILSYS
-        # record is specific to that user, not a generic one.
+        # We only overwrite the mount path if the record is specific to that
+        # user, not a generic one ('*').
+
         # If multiple records are found, last user-specific one wins for the
         # mount path, and last one wins for the FILSYS record.
 
+        if [[ "${record[0]}" == "${passwd[0]}" || "${record[0]}" == '*' ]] ; then
 
-        if [[ "${record[0]}" == "${passwd[0]}" ]] ; then
-            mountpath="${record[-1]}"
-            (( FILSYS )) && filsys[${passwd[0]}]="${record[@]:1}"
-
-        elif [[ "${record[0]}" == '*' ]] ; then
-            (( FILSYS )) && filsys[${passwd[0]}]="${record[@]:1}"
+            case ${#record[@]} in
+                1)      (( FILSYS )) && filsys[${passwd[0]}]=
+                        ;;
+                2)      [[ "${record[0]}" == "${passwd[0]}" ]] && mountpath="${record[-1]}"
+                        ;;
+                5|6)    [[ "${record[0]}" == "${passwd[0]}" ]] && mountpath="${record[-1]}"
+                        (( FILSYS )) && filsys[${passwd[0]}]="${record[@]:1}"
+                        ;;
+                *)      delayedwarnings+="WARNING: Invalid FILSYS record: ${record[@]}\n"
+                        continue
+                        ;;
+            esac
         fi
     done
 
