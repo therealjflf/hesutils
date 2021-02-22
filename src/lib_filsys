@@ -29,12 +29,15 @@
 # Helper functions
 # ------------------------------------------------------------------------------
 
-# Clean the input to parse_external_filsys:
-# - delete all comments, including inline and the preceding spaces;
-# - delete empty lines.
+# Filter the input to parse_external_filsys:
+# - select only the lines starting with the key (user name) or "*";
+# - delete inline comments and their preceding spaces.
 # Pound signs not preceded by a space or tab will not be touched.
 
-function clean_fs_input { sed -e 's/\(^\|\s\+\)#.*$//g' -e '/^\s*$/d' ; }
+function filter_fs_input {
+    awk -v key="${passwd[0]}" \
+        '$1 == key || $1 == "*" { sub(/[[:blank:]]+#.*/, ""); print}'
+}
 
 
 
@@ -95,8 +98,9 @@ function parse_external_filsys {
 
     while read -a record ; do
 
-        # We're assuming that all comments have already been stripped out, and
-        # all empty lines deleted.
+        # We're assuming that we're getting a filtered input:
+        # - records for that user or "*" only;
+        # - inline comments stripped.
 
         # There's a number of cases that we have to support. Let's sort them by
         # the number of fields in the record.
@@ -111,21 +115,18 @@ function parse_external_filsys {
         # If multiple records are found, last user-specific one wins for the
         # mount path, and last one wins for the FILSYS record.
 
-        if [[ "${record[0]}" == "${passwd[0]}" || "${record[0]}" == '*' ]] ; then
-
-            case ${#record[@]} in
-                1)      (( FILSYS )) && filsys[${passwd[0]}]=
-                        ;;
-                2)      [[ "${record[0]}" == "${passwd[0]}" ]] && mountpath="${record[-1]}"
-                        ;;
-                5|6)    [[ "${record[0]}" == "${passwd[0]}" ]] && mountpath="${record[-1]}"
-                        (( FILSYS )) && filsys[${passwd[0]}]="${record[@]:1}"
-                        ;;
-                *)      delayedwarnings+="WARNING: Invalid FILSYS record: ${record[@]}\n"
-                        continue
-                        ;;
-            esac
-        fi
+        case ${#record[@]} in
+            1)      (( FILSYS )) && filsys[${passwd[0]}]=
+                    ;;
+            2)      [[ "${record[0]}" == "${passwd[0]}" ]] && mountpath="${record[-1]}"
+                    ;;
+            5|6)    [[ "${record[0]}" == "${passwd[0]}" ]] && mountpath="${record[-1]}"
+                    (( FILSYS )) && filsys[${passwd[0]}]="${record[@]:1}"
+                    ;;
+            *)      delayedwarnings+="WARNING: Invalid FILSYS record: ${record[@]}\n"
+                    continue
+                    ;;
+        esac
     done
 
     # avoid returning the read's final error code
@@ -179,10 +180,10 @@ function filsys_voodoo {
     fi
 
     # if needed, swap the whole FILSYS record with data form the FSMAPFILE
-    [[ "$FSMAPFILE" ]] && parse_external_filsys < <( cat "$FSMAPFILE" | clean_fs_input )
+    [[ "$FSMAPFILE" ]] && parse_external_filsys < <( cat "$FSMAPFILE" | filter_fs_input)
 
     # if needed, swap the whole FILSYS record with data form the FSCOMMAND
-    [[ "$FSCOMMAND" ]] && parse_external_filsys < <( "$FSCOMMAND" "${passwd[@]}" | clean_fs_input )
+    [[ "$FSCOMMAND" ]] && parse_external_filsys < <( "$FSCOMMAND" "${passwd[@]}" | filter_fs_input)
 
 
     # finally update the home directory to use the mount path
