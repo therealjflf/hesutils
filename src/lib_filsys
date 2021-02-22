@@ -26,6 +26,18 @@
 
 
 
+# Helper functions
+# ------------------------------------------------------------------------------
+
+# Clean the input to parse_external_filsys:
+# - delete all comments, including inline and the preceding spaces;
+# - delete empty lines.
+# Pound signs not preceded by a space or tab will not be touched.
+
+function clean_fs_input { sed -e 's/\(^\|\s\+\)#.*$//g' -e '/^\s*$/d' ; }
+
+
+
 # Run sed commands on the paths
 # ------------------------------------------------------------------------------
 
@@ -83,15 +95,8 @@ function parse_external_filsys {
 
     while read -a record ; do
 
-        # skip empty lines and comments
-        ( ! (( ${#record[@]} )) || [[ ${record[0]} =~ ^# ]] ) && continue
-
-        # strip inline comments -- need to be preceded by a blank!
-        for i in $(seq 0 ${#record[@]}) ; do
-            if [[ "${record[$i]}" =~ ^# ]] ; then
-                record=( "${record[@]:0:$i}" )
-            fi
-        done
+        # We're assuming that all comments have already been stripped out, and
+        # all empty lines deleted.
 
         # There's a number of cases that we have to support. Let's sort them by
         # the number of fields in the record.
@@ -174,10 +179,10 @@ function filsys_voodoo {
     fi
 
     # if needed, swap the whole FILSYS record with data form the FSMAPFILE
-    [[ "$FSMAPFILE" ]] && parse_external_filsys < "$FSMAPFILE"
+    [[ "$FSMAPFILE" ]] && parse_external_filsys < <( cat "$FSMAPFILE" | clean_fs_input )
 
     # if needed, swap the whole FILSYS record with data form the FSCOMMAND
-    [[ "$FSCOMMAND" ]] && parse_external_filsys < <( "$FSCOMMAND" "${passwd[@]}" )
+    [[ "$FSCOMMAND" ]] && parse_external_filsys < <( "$FSCOMMAND" "${passwd[@]}" | clean_fs_input )
 
 
     # finally update the home directory to use the mount path
