@@ -170,7 +170,7 @@ function filsys_voodoo {
     # generate the automatic FILSYS records using those values
     if (( FILSYS )) && (( FILSYSAUTO )) ; then
         tmp="$FSTYPE "
-        case "$FSTYPE" in
+        case "${FSTYPE^^}" in
             "AFS")  tmp+="$exportpath " ;;
             "NFS")  tmp+="$exportpath $NFSSERVER " ;;
             *)      tmp+="${FSDEVICE//\{\}/$exportpath} ";;

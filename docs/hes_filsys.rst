@@ -1,10 +1,10 @@
 
-The FILSYS records
-==================
+Homepaths and FILSYS records
+============================
 
 The generation of FILSYS records is a rather complex topic. One of the reasons for this is the existence of multiple separate paths in different places: ``/etc/passwd`` on the management system, and ``passwd`` and ``filsys`` Hesiod records.
 
-This is documented in the `Problem with the multiple home paths <hes_homepaths.rst>`__, which is mandatory prerequisite reading.
+This is documented in the `The curious case of the multiple home paths <hes_homepaths.rst>`__, which is mandatory prerequisite reading.
 
 
 As implemented in the Hesutils, the non-FILSYS home directory modifications, to obtain the mount path from the passwd path, are a subset of the larger FILSYS generation codepath. The non-FILSYS configuration parameters are shared with the FILSYS case, although in some cases the behaviour might be slightly different. So it makes sense to explain the two cases together.
@@ -49,14 +49,14 @@ The two first formats are the historical ones, from Project Athena. The third on
 In the generic format, the ``<device>`` is essentially anything that can work in the first field of an ``/etc/fstab`` entry.
 
 
-This means that an NFS FILSYS record can be represented in two different ways, the classic one and the generic one::
+This means that an NFSv4 FILSYS record can be represented in two different ways, the classic one and the generic one::
 
-    joe.filsys          TXT    "NFS /export/home/joe nfssrv rw /mnt/nfs/home/joe"
-    joe.filsys          TXT    "nfs nfssrv:/export/home/joe rw /mnt/nfs/home/joe"
+    joe.filsys          TXT    "NFS /export/home/joe nfssrv rw,nfsvers=4 /mnt/nfs/home/joe"
+    joe.filsys          TXT    "nfs4 nfssrv:/export/home/joe rw /mnt/nfs/home/joe"
 
 In the generic record, the device contains both the NFS server and the export path.
 
-Selection of the record format in `The automatic FILSYS records`_ is done via the ``FSTYPE``: if it's "NFS" (all caps), then it's the classic path. If it's "nfs" or "nfs4", then it's the generic format.
+Selection of the record format in `The automatic FILSYS records`_ is done via the ``FSTYPE``: if it's "NFS" (upper or lower case), then it's the classic path. If it's "nfs4" (or anything else for that matter), then it's the generic format.
 
 
 
@@ -139,18 +139,18 @@ If the filesystem is NFS, the file server is the localhost on which the script i
 The map file and command
 ------------------------
 
-The next step in the pipeline are the user-provided map file the map command. They both have the same role: provide a complete record that replaces any previous one.
+The next step in the pipeline are the user-provided map file and map command. They both have the same role: provide a complete record that replaces any previous one.
 
 The map file, which path is stored in ``FSMAPFILE``, contains static records. It is parsed to find entries that match the user for which a record is being generated. The acceptable record formats are the same as in `Note on the various FILSYS formats`_.
 
-The command, which name or full path is stored in ``FSCOMMAND``, is executed once per user exported to Hesiod. It is called with the contents of the fstab entry for that user passed as parameters, pre-split. The command returns records in one of the formats described in `Note on the various FILSYS formats`_.
+The map command, which name or full path is stored in ``FSCOMMAND``, is executed once per user exported to Hesiod. It is called with the contents of the fstab entry for that user passed as parameters, pre-split. The command returns records in one of the formats described in `Note on the various FILSYS formats`_.
 
 Neither the map file nor the command are expected to contain or return records for each and every Hesiod users. For example they can be used to override the automatic FILSYS records for a subset of users. The command (typically a script of some sort) allows for more refined rules to be implemented, for example changing the filesystem servers or paths based on group memberships.
 
 The records can either be user-specific, with the first field being the user name, or generic, with the first field being ``*``::
 
-    NFS /export/home/joe nfssrv rw /mnt/nfs/home/joe
-    * /export/home nfssrv rw /mnt/nfs/home
+    joe NFS /export/home/joe nfssrv rw /mnt/nfs/home/joe
+    * NFS /export/home nfssrv rw /mnt/nfs/home
 
 This changes the way the records are processed, see below for more details.
 
