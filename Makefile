@@ -23,18 +23,23 @@
 
 PREFIX ?= /usr/local
 
+# Brace expansion requires bash
+SHELL := $(shell which bash)
+
 install:
-	mkdir -pv $(PREFIX)/share/hesutils
-	cp -v src/* $(PREFIX)/share/hesutils
-	chmod 755 $(PREFIX)/share/hesutils/{hesadd,hesgen}
+	mkdir -p $(PREFIX)/{bin,sbin,share/hesutils}
+	cp src/* $(PREFIX)/share/hesutils
+	chmod 755 $(PREFIX)/share/hesutils/{hes,hesadd,hesgen}
+	ln -s $(PREFIX)/share/hesutils/hes $(PREFIX)/bin/hes
 	ln -s $(PREFIX)/share/hesutils/hesgen $(PREFIX)/bin/hesgen
 	ln -s $(PREFIX)/share/hesutils/hesadd $(PREFIX)/sbin/hesadd
 	ln -s $(PREFIX)/share/hesutils/hesadd $(PREFIX)/sbin/hesuseradd
 	ln -s $(PREFIX)/share/hesutils/hesadd $(PREFIX)/sbin/hesgroupadd
-	install -b hesutils.conf /etc
+	-install -b hesutils.conf /etc
 
 uninstall:
-	rm -f $(PREFIX)/bin/hesgen $(PREFIX)/sbin/{hesadd,hesuseradd,hesgroupadd}
+	rm -f $(PREFIX)/bin/{hes,hesgen}
+	rm -f $(PREFIX)/sbin/{hesadd,hesuseradd,hesgroupadd}
 	rm -fr $(PREFIX)/share/hesutils
 
 # Make runs each line in a separate shell, so run_tests.sh need to be called on
