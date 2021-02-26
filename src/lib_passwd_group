@@ -114,7 +114,7 @@ function parse_passwd {
     (( verbose )) && echo >&2
     echo -en "$delayedwarnings" >&2
 
-    (( verbose )) && echo -e "  --> ${#hesusers[@]} Hesiod users" >&2 || true
+    (( verbose )) && echo "  --> ${#hesusers[@]} Hesiod users" >&2 || true
 }
 
 
@@ -132,7 +132,7 @@ function parse_group {
 
     local delayedwarnings=""
 
-    (( verbose )) && echo -n "Processing the group file entries: " >&2
+    (( verbose )) && echo -en "\nProcessing the group file entries: " >&2
 
     while IFS=: read -a group ; do
 
@@ -183,6 +183,6 @@ function parse_group {
     (( verbose )) && echo >&2
     echo -en "$delayedwarnings" >&2
 
-    (( verbose )) && echo -e "\n  --> ${#hesgroups[@]} Hesiod groups" >&2 || true
+    (( verbose )) && echo -e "  --> ${#hesgroups[@]} Hesiod groups\n" >&2 || true
 }
 
