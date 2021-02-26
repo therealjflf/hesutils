@@ -33,7 +33,7 @@
 # - double quotes, as all TXT record payloads are double-quoted;
 # - colons which aren't field separators.
 #
-# Also, they need to be double-escape as one quote backslash will be eaten by
+# Also, they need to be double-escaped as one quote backslash will be eaten by
 # the shell between here and the output.
 #
 # DNS server-specific sanitization is done in lib_output.

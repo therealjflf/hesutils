@@ -77,7 +77,7 @@ Is there a Hesiod standard?
 
 There isn't a real Hesiod standard per se, apart from how it's implemented and used at MIT. The two core documents that describe it are:
 
-- "Hesiod Name Service" by Steven P. Dyer and Felix S. Hsu, in Project Athena Technical Plan, 1987.
+- "Hesiod Name Service" by Stephen P. Dyer and Felix S. Hsu, in Project Athena Technical Plan, 1987.
   Available from `The Athena Technical Plan <https://web.mit.edu/Saltzer/www/publications/atp.html>`__ (`local copy <PDF/e.2.3.pdf>`__ of the PDF file)
 
 - "The Hesiod Name Server" by Stephen P. Dyer, in Proceedings of the USENIX Winter Technical Conference, 1988.

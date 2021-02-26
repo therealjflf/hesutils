@@ -1,6 +1,6 @@
 
-The problem with the multiple home paths
-========================================
+The curious case of the multiple home paths
+===========================================
 
 When generating Hesiod ``passwd`` and ``FILSYS`` records, an interesting problem arises: the possible existence of different home paths.
 
@@ -73,5 +73,5 @@ At the other extreme, all three paths may be different:
 
 The Hesutils provide powerful, sophisticated, multi-layered, flexible, software-defined, user-extensible and grossly overkill mechanisms of home path modification. Those can generate the export and mount paths by modifying the passwd paths, or replace them with arbitrary values.
 
-As the non-FILSYS case is a slightly simpler version of the FILSYS case, both are documented in `FILSYS records <hes_filsys.rst>`__.
+As the non-FILSYS case is a slightly simpler version of the FILSYS case, both are documented in `Homepaths and FILSYS records <hes_filsys.rst>`__.
 

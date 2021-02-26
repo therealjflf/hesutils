@@ -92,7 +92,7 @@ Things to be aware of
 
 All checks for user name, UID, group name and GID validity and unicity are done by the standard UNIX tools. The resulting ``/etc/passwd`` and ``/etc/group`` files are assumed to be valid. ``Hesgen`` doesn't do any further check, so if you're using hand-edited source files you need to make sure that there aren't duplicate or invalid entries.
 
-When using ``useradd`` or equivalent, the home directory path depends on the machine on which the users were originally created. The Hesutils support multiple methods of modifying the user home paths on the fly when creating the user records; see the `problem of the multiple home paths <hes_homepaths.rst>`__ and the `FILSYS records <hes_filsys.rst>`__ for more details.
+When using ``useradd`` or equivalent, the home directory path depends on the machine on which the users were originally created. The Hesutils support multiple methods of modifying the user home paths on the fly when creating the user records; see `The curious case of the multiple home paths <hes_homepaths.rst>`__ and the `Homepaths and FILSYS records <hes_filsys.rst>`__ for more details.
 
 Each possible user shell in the Hesiod user records needs to exist in the same path on all client machines. Currently the Hesutils don't offer any way of modifying the user shell when generating records.
 

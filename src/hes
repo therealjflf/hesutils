@@ -44,7 +44,8 @@ This command queries all possible Hesiod record types for the given names, and
 prints out the record contents.
 
 It relies on \"hesinfo\", which is part of the \"hesiod\" package in most Linux
-distributions. The upstream Hesiod server is configured 
+distributions. The upstream Hesiod server is configured in the system-wide
+Hesiod configuration file, typically \"/etc/hesiod.conf\".
 " >&2
 }
 
