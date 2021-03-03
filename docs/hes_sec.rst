@@ -24,22 +24,24 @@ Security limitations in the DNS protocol have been known for decades, and there 
 A starting point for readers without any familiarity to the topic could be Cloudflare's introduction to DNS security: `<https://www.cloudflare.com/learning/dns/dns-security/>`__
 
 
-Record authenticity
-~~~~~~~~~~~~~~~~~~~
+Record authenticity and integrity
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is the answer to the questions:
+Record authenticity is the question:
 
-- did my Hesiod answer come from the right server, or from somewhere else?
+- was my Hesiod answer provided by the right server (the zone owner), or did someone else impersonate it?
+
+Record integrity is the question:
 
 - has my Hesiod answer been modified between the DNS server and myself?
 
 In other words, we want to be sure that we received an unmodified answer from the right server.
 
 
-Without this guarantee, an attacker might be able to answer a Hesiod request with forged records, which could compromise system integrity: changed home directories, changed shells (executing an attacker-provided binary at login), changed group memberships, etc. Because of this, record authenticity is absolutely critical for a sane Hesiod deployment.
+Without those guarantees, an attacker might be able to answer a Hesiod request with forged records, which could compromise system integrity: changed home directories, changed shells (executing an attacker-provided binary at login), changed group memberships, etc. Because of this, record authenticity is absolutely critical for a sane Hesiod deployment.
 
 
-The DNS answer to this is called the `Domain Name System Security Extensions <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`__, or DNSSEC. With DNSSEC the records of a zone are signed with a private key, which allows the resolver to check whether the records have been tampered with.
+The DNS answer to these is called the `Domain Name System Security Extensions <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`__, or DNSSEC. With DNSSEC the records of a zone are signed with a private key, which both certifies that they come from the zone owner, and allows the resolver to check whether the records have been tampered with.
 
 
 On-wire data confidentiality
@@ -50,10 +52,10 @@ This is the answer to the question:
 - has anyone been able to observe either my Hesiod request, or its answer?
 
 
-Using DNSSEC, forged Hesiod answers would be rejected by the client's resolver. But as long as the requests and answers are transmitted in clear on the wire, a spy would be able to monitor them and obtain valuable information about the current state of the systems: who is logged in where, what are the group memberships, etc. This in turn could be useful to time attacks (when some specific people are not logged in, for example), or to obtain corporate information that could be used for phishing attacks. So while you may be able to get away with confidentiality in small deployments, it is necessary in larger, more critical ones.
+Using DNSSEC, forged Hesiod answers would be rejected by the client's resolver. But as long as the requests and answers are transmitted in clear on the wire, a spy would still be able to monitor them and obtain valuable information (SIGINT) about the current state of the systems: who is logged in and where, what are the group memberships, etc. This in turn could be useful to time attacks (when some specific people are not logged in, for example), or to obtain corporate information that could be used for phishing attacks. So while you may be able to get away with confidentiality in small deployments, it is necessary in larger, more critical ones.
 
 
-The answer to this problem is to encrypt the Hesiod requests and answers between the client and the server. The two main techniques are `DNS-over-TLS <https://en.wikipedia.org/wiki/DNS_over_TLS>`__ and `DNS-over-HTTPS <https://en.wikipedia.org/wiki/DNS_over_HTTPS>`_.
+The answer to this problem is to encrypt the DNS requests and answers between the client and the server. Currently the two main techniques are `DNS-over-TLS <https://en.wikipedia.org/wiki/DNS_over_TLS>`__ and `DNS-over-HTTPS <https://en.wikipedia.org/wiki/DNS_over_HTTPS>`__.
 
 
 
@@ -64,20 +66,20 @@ Once we have the guarantee that we received unmodified records from the DNS serv
 
 When a user logs in, the system performs two separate tasks:
 
-- user authorization (who are you?);
+- user authorization (do I know you?);
 
 - and user authentication (how can you prove that you are who you say you are?).
 
 Most often this comes under the guise of a login name and a password.
 
 
-There are other elements to user authorization, such as group memberships, home directory, shell, etc. All of those are provided in Hesiod records, so the first part, authorization, is taken care of. But what about authentication?
+There are various elements to user authorization, such as group memberships, home directory, shell, etc. All of those are provided in Hesiod records, so the first part, authorization, is taken care of. But what about authentication?
 
 
 Password logins
 ~~~~~~~~~~~~~~~
 
-The traditional computer authentication method is the password. When this was introduced to UNIX, graybeards were roaming freely in the glow of blinkenlights and suspenders answered the call of clacking teletype consoles. Life was simple. Passwords were hashed, and the resulting jumble was inserted in the second field of an ``/etc/passwd`` entry.
+The traditional computer authentication method is the password. When this was introduced to UNIX, graybeards were roaming freely in the glow of blinkenlights and snapping suspenders answered the call of clacking teletype consoles. Life was simple. Passwords were hashed, and the resulting jumble was inserted in the second field of an ``/etc/passwd`` entry.
 
 As it turned out, this didn't cut it. Increasing computing power made it easy to brute-force the hashes. Then the hashes were salted and computed with cryptographically-secure hash functions, to make things a bit more complicated. And finally the hashes were moved out of the ``/etc/passwd`` file, into ``/etc/shadow`` with reduced permissions.
 
