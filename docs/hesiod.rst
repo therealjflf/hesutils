@@ -204,6 +204,9 @@ I have deployed Hesiod in two different scenarios:
 Now and then I read of other people having deployed it and being very happy. I believe that part of the reason why we don't read so much about it is that it just works. It's extremely easy to set up and there's no steep learning curve as with OpenLDAP -- and therefore no question on ServerFault!
 
 
+Regrettably, the GNU libc maintainers decided unilaterally in 2020 to `deprecate <https://public-inbox.org/libc-alpha/87r1sx4h3v.fsf@oldenburg2.str.redhat.com/T/>`__ the Hesiod NSS module that was first added in 2000. At the time of writing (2021) I don't know yet of any external project to maintain that code outside of the glibc.
+
+
 
 Links and additional documentation
 ----------------------------------
@@ -216,4 +219,9 @@ A few blog articles have been written in recent years (more recently than the re
 - `<https://simonwo.net/technical/hesiod/>`__
 - `<https://jpmens.net/2012/06/28/hesiod-a-lightweight-directory-service-on-dns/>`__
 - `<https://soylentnews.org/meta/article.pl?sid=15/07/13/0255214>`__
+
+
+**WARNING:**
+
+The blogs at ``simonwo`` and ``soylentnews`` both show GRPLIST examples matching ``nss_hesiod``'s behaviour, but not the specs. See `Deviations and implementation choices <hes_impl.rst>`__ for more details on that topic.
 
