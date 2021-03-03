@@ -145,28 +145,30 @@ function hes_output_offset {
 
 
     # then grplist records
-    echo "${COMMENT} Group lists"
+    if (( USERGRPLIST )) ; then
+        echo "${COMMENT} Group lists"
 
-    for uid in ${!uid2user[@]} ; do
-        user=${uid2user[$uid]}
-        while read line ; do
+        for uid in ${!uid2user[@]} ; do
+            user=${uid2user[$uid]}
+            while read line ; do
 
-            case $OUTPUTFMT in
-                dnsmasq )
-                    printf 'txt-record=%s.%s,"%s"\n' ${user}.grplist $HESDOMAIN "$line"
-                    ;;
-                unbound )
-                    printf $'local-data:\t\'%s.%s.\t%s\t%s\tTXT\t"%s"\'\n' ${user}.grplist ${HESDOMAIN} "$inttl" "$CLASS" "$line"
-                    ;;
-                bind )
-                    printf $'%s\t%s\t%s\tTXT\t"%s"\n' ${user}.grplist "$inttl" "$CLASS" "$line"
-                    ;;
-            esac
+                case $OUTPUTFMT in
+                    dnsmasq )
+                        printf 'txt-record=%s.%s,"%s"\n' ${user}.grplist $HESDOMAIN "$line"
+                        ;;
+                    unbound )
+                        printf $'local-data:\t\'%s.%s.\t%s\t%s\tTXT\t"%s"\'\n' ${user}.grplist ${HESDOMAIN} "$inttl" "$CLASS" "$line"
+                        ;;
+                    bind )
+                        printf $'%s\t%s\t%s\tTXT\t"%s"\n' ${user}.grplist "$inttl" "$CLASS" "$line"
+                        ;;
+                esac
 
-        done < <(echo ${grplists[$user]} | $sanitize)
-    done
+            done < <(echo ${grplists[$user]} | $sanitize)
+        done
 
-    echo
+        echo
+    fi
 
 
     # and finally filsys records

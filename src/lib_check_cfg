@@ -117,7 +117,7 @@ function check_cfg_file {
     sanitize_binary_params 0 FULLMEMBERLIST FILSYS FILSYSAUTO || failed=1
 
     # Check the binary options that default to 1
-    sanitize_binary_params 1 TRIMGECOS CREATEZONE BLOCKUPSTREAM BLOCKATHENA || failed=1
+    sanitize_binary_params 1 TRIMGECOS USERGRPLIST CREATEZONE BLOCKUPSTREAM BLOCKATHENA || failed=1
 
 
     # The standard calls for LHS and RHS starting with leading dots. Those just get

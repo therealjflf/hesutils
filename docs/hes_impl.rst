@@ -35,7 +35,7 @@ The same paper gives those examples of ``group`` and ``grplist`` records::
 
 This shows an interesting feature of Hesiod: groups of groups. A user can be member of a meta-group, which has a GRPLIST RR containing other groups or further GRPLIST names. That's an easy way to add users to fixed groups-of-groups, as would be required when students sign up for certain classes for example.
 
-In that paper, as well as ``hesinfo``'s `manpage<https://manpages.ubuntu.com/manpages/cosmic/man1/hesinfo.1.html>`__, a GRPLIST record is therefore defined with the key ``<groupname>.grplist``. One group points to a recursive list of groups.
+In that paper, as well as ``hesinfo``'s `manpage <https://manpages.ubuntu.com/manpages/cosmic/man1/hesinfo.1.html>`__, a GRPLIST record is therefore defined with the key ``<groupname>.grplist``. One group points to a recursive list of groups.
 
 The glibc's ``nss_hesiod`` module decided to redefine GRPLIST records. The key is now ``<username>.grplist``, and the value is the list of groups to which a user belongs. That's a completely different behaviour, which isn't document in any way that I know of (outside of looking at the sources or logging requests on the server). Most of the official docs describe the official behaviour, while most blog articles describe the glibc NSS module's behaviour.
 

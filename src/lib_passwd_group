@@ -84,7 +84,7 @@ function parse_passwd {
         # (I'm looking at you Debian and derivatives!)
         # We need to add that information in 2 different places:
         # 1. the list of groups a user is a member of
-        grplists[${passwd[0]}]=${passwd[3]}
+        (( USERGRPLIST )) && grplists[${passwd[0]}]=${passwd[3]}
         # 2. the list of users that are member of a given group
         groupmembers[${passwd[3]}]+="${passwd[0]},"
 
@@ -159,7 +159,7 @@ function parse_group {
             # (as we added that while parsing the passwd file)
             if [[ " ${!hesusers[@]} " =~ " $member " ]] ; then
                 if [[ ${group[2]} != ${primarygid[$member]} ]] ; then
-                    grplists[${member}]+=":${group[2]}"
+                    (( USERGRPLIST )) && grplists[${member}]+=":${group[2]}"
                     groupmembers[${group[2]}]+="${member},"
                 fi
             fi
