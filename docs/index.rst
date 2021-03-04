@@ -12,6 +12,14 @@ Introduction to Hesiod
 - `Passwords and security concerns with Hesiod <hes_sec.rst>`_
 
 
+Manual pages
+------------
+
+- ``hesadd``: `Add Hesiod users and groups <man8/hesadd.rst>`_
+- ``hesgen``: `Generate Hesiod DNS records <man1/hesgen.rst>`_
+- ``hes``: `Query all Hesiod records attached to a name <man1/hes.rst>`_
+
+
 Using the Hesutils tools
 ------------------------
 
@@ -19,8 +27,6 @@ Using the Hesutils tools
 - `The curious case of the multiple home paths <hes_homepaths.rst>`_
 - `Homepaths and FILSYS records <hes_filsys.rst>`_
 - `The Hesutils configuration file <hes_conffile.rst>`_
-- ``Hesadd``: `User and group management <hesadd.rst>`_
-- ``Hesgen``: `Generating the Hesiod DNS records <hesgen.rst>`_
 - `Deviations and implementation choices <hes_impl.rst>`_
 
 
