@@ -8,7 +8,7 @@ Deviations
 GRPLIST
 ~~~~~~~
 
-``Grplist`` are described in `Dyer's 1988 paper <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.37.8519>`__ (`local copy <PDF/10.1.1.37.8519.pdf>`__ of the PDF file) as::
+GRPLIST records are described in `Dyer's 1988 paper <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.37.8519>`__ (`local copy <PDF/10.1.1.37.8519.pdf>`__ of the PDF file) as::
 
     HesiodName      HesiodNameType      Used By                 Info Returned
     group name      "grplist"           getgrent(), et. al.     Athena-wide group membership mapping
@@ -35,13 +35,13 @@ The same paper gives those examples of ``group`` and ``grplist`` records::
 
 This shows an interesting feature of Hesiod: groups of groups. A user can be member of a meta-group, which has a GRPLIST RR containing other groups or further GRPLIST names. That's an easy way to add users to fixed groups-of-groups, as would be required when students sign up for certain classes for example.
 
-In that paper, as well as ``hesinfo``'s `manpage <https://manpages.ubuntu.com/manpages/cosmic/man1/hesinfo.1.html>`__, a GRPLIST record is therefore defined with the key ``<groupname>.grplist``. One group points to a recursive list of groups.
+In that paper, as well as ``hesinfo``'s `manpage <https://manpages.ubuntu.com/manpages/cosmic/man1/hesinfo.1.html>`__, a GRPLIST record is therefore defined with the key ``<groupname>.grplist``. A group name points to a recursive list of groups.
 
 The glibc's ``nss_hesiod`` module decided to redefine GRPLIST records. The key is now ``<username>.grplist``, and the value is the list of groups to which a user belongs. That's a completely different behaviour, which isn't document in any way that I know of (outside of looking at the sources or logging requests on the server). Most of the official docs describe the official behaviour, while most blog articles describe the glibc NSS module's behaviour.
 
-That overloading of the name type (``grplist``) is very unfortunate. Obtaining a list of groups for a given user is a very desirable feature, but it should have been under a different name type. In the current situation, when a user and a group share the same name it's impossible to know if ``<name>.grplist`` refers to the user (to obtain a list of memberships) or group (to obtain a list of subgroups).
+That overloading of the name type (``grplist``) is very unfortunate. Obtaining a list of groups for a given user is a very desirable feature and some software might require the ability to do so, but it should have been under a different name type. In the current situation, when a user and a group share the same name it's impossible to know if ``<name>.grplist`` refers to the user (to obtain a list of memberships) or group (to obtain a list of subgroups).
 
-Also when using the group variant of GRPLIST, the records are quite simple and can be edited by hand without too much hassle. Using the user variant complicates things a lot as each modification to a user requires editing in multiple places, thus increasing the chances of a mistake. So some sort of software tool for record generation is recommended with the user variant, such as, you guessed it, the Hesutils.
+Also when using the group variant of GRPLIST, the records are quite simple and can be edited by hand without too much hassle. Using the user variant complicates things a lot as each modification to a user requires editing in multiple places, thus increasing the chances of a mistake. Some sort of software tool for record generation is recommended with the user variant, such as, you guessed it, the Hesutils.
 
 
 For compatibility reasons ``hesgen`` will generate the *user* variant of GRPLIST; the list of memberships. Not doing so might break programs on the client nodes. It is possible to disable GRPLIST generation with a parameter in the configuration file.
@@ -67,7 +67,7 @@ So ``nss_hesiod`` takes every single entry in the list, checks whether it's a GI
 
 As it turns out, this is entirely unnecessary. Things work just as well when only one half of the pair is present (which half doesn't matter), and the number of DNS requests is halved.
 
-So for optimization's sake, ``hesgen`` will only list the GIDs when generating user variant GRPLIST records. And at the same time this eliminates all sorts of potential issues with mismatching or missing pair members.
+So for optimization's sake, ``hesgen`` will only list the GIDs when generating user variant GRPLIST records. And at the same time this eliminates all sorts of potential issues with mismatches or missing pair members.
 
 
 
@@ -91,7 +91,7 @@ Things that we don't do (yet)
 
 - Split large records.
 
-  In this day and age the servers could do that themselves when they load the zones! Only dnsmasq is smart enough to do it.
+  In this day and age the servers should do that themselves when they load the zones. Only dnsmasq is smart enough to do it.
 
 
 - Support FILSYS AMD format.
@@ -101,7 +101,7 @@ Things that we don't do (yet)
 
 - Generate other Hesiod records.
 
-  Some of them might be partly obtainable from existing databases, but we're 
+  Some of them might be partly obtainable from existing databases. On the client side, the Glibc NSS module also supports protocol and service RRs. As those are reasonably static (certainly less volatile user and group lists), they can simply be user-created and appended to the generated records.
 
 
 

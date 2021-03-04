@@ -55,9 +55,9 @@ Options:
   -v                run in verbose mode
   -t                test the configuration file and exit
   -d                don't print out the date in the output
-  -c <filename>     use an alternative configuration file
-  -p <filename>     use an alternative passwd file
-  -g <filename>     use an alternative group file
+  -c <filename>     use an alternate configuration file
+  -p <filename>     use an alternate passwd file
+  -g <filename>     use an alternate group file
 " >&2
 }
 
