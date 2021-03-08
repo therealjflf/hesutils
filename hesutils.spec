@@ -26,59 +26,81 @@
 #
 # ==============================================================================
 
-Name:       hesutils
-Version:    %(git describe --always)
-Release:    1%{?dist}
-Summary:    The Hesiod utilities
-License:    GPLv3
-URL:        https://gitlab.com/jflf/hesutils
-Source0:    %{expand:%%(pwd)}
-BuildArch:  noarch
+Name:           hesutils
+Version:        %(git describe --always | tr -- - _)
+Release:        1%{?dist}
+Summary:        The Hesiod utilities
+License:        GPLv3
+URL:            https://gitlab.com/jflf/hesutils
+Source0:        %{expand:%%(pwd)}
+BuildArch:      noarch
 
-Provides:   hesadd = %{version}-%{release}
-Provides:   hesuseradd = %{version}-%{release}
-Provides:   hesgroupadd = %{version}-%{release}
-Provides:   hesgen = %{version}-%{release}
+Provides:       hes = %{version}-%{release}
+Provides:       hesadd = %{version}-%{release}
+Provides:       hesuseradd = %{version}-%{release}
+Provides:       hesgroupadd = %{version}-%{release}
+Provides:       hesgen = %{version}-%{release}
 
-Requires:   bash >= 4, gawk
+BuildRequires:  bash >= 4, rst2man
+Requires:       bash >= 4, awk, column, coreutils, sed, which
+Recommends:     hesinfo
+
 
 %description
 Hesutils, the HESiod UTILitieS, is a set of tools to facilitate the deployment and usage of the Hesiod user and group name service.
 
-Information about Hesiod and the Hesutils documentation are available in the project's wiki on GitLab:
-https://gitlab.com/jflf/hesutils/-/wikis/home
+Information about Hesiod and the Hesutils documentation are available in the project's repository on Gitlab:
+https://gitlab.com/jflf/hesutils
+
 
 %prep
 # clean out old files
 find . -mindepth 1 -delete
+find %{buildroot} -mindepth 1 -delete || true
+cp -af %{SOURCEURL0}/. .
+
 
 %build
-# nothing there
+make man
+
 
 %install
+mkdir -p %{buildroot}/%{_bindir}/
 mkdir -p %{buildroot}/%{_sbindir}/
 mkdir -p %{buildroot}/%{_sysconfdir}/
-mkdir -p %{buildroot}/%{_datadir}/hesutils/
+mkdir -p %{buildroot}/%{_datadir}/hesutils
+mkdir -p %{buildroot}/%{_mandir}/man1
+mkdir -p %{buildroot}/%{_mandir}/man8
 
-install -m 755 %{SOURCEURL0}/src/* %{buildroot}/%{_datadir}/hesutils/
+install -m 755 ./src/* %{buildroot}/%{_datadir}/hesutils/
+chmod 644 %{buildroot}/%{_datadir}/hesutils/lib_*
 
+ln -s %{_datadir}/hesutils/hes %{buildroot}/%{_bindir}/hes
+ln -s %{_datadir}/hesutils/hesgen %{buildroot}/%{_bindir}/hesgen
 ln -s %{_datadir}/hesutils/hesadd %{buildroot}/%{_sbindir}/hesadd
 ln -s %{_datadir}/hesutils/hesadd %{buildroot}/%{_sbindir}/hesuseradd
 ln -s %{_datadir}/hesutils/hesadd %{buildroot}/%{_sbindir}/hesgroupadd
-ln -s %{_datadir}/hesutils/hesgen %{buildroot}/%{_sbindir}/hesgen
 
-install -m 644 %{SOURCEURL0}/hesutils.conf %{buildroot}/%{_sysconfdir}/
-install -m 644 %{SOURCEURL0}/LICENSE %{buildroot}/%{_datadir}/hesutils/
+install -m 644 docs/man1/*.1 %{buildroot}/%{_mandir}/man1/
+install -m 644 docs/man8/*.8 %{buildroot}/%{_mandir}/man8/
+
+install -m 644 ./hesutils.conf %{buildroot}/%{_sysconfdir}/
+
 
 %files
-%{_datadir}/hesutils/
+%{_datadir}/hesutils
+%{_bindir}/hes
+%{_bindir}/hesgen
 %{_sbindir}/hesadd
 %{_sbindir}/hesuseradd
 %{_sbindir}/hesgroupadd
-%{_sbindir}/hesgen
+%{_mandir}/man1/hes.1*
+%{_mandir}/man1/hesgen.1*
+%{_mandir}/man8/hesadd.8*
 %config(noreplace) %{_sysconfdir}/hesutils.conf
-%license %{_datadir}/hesutils/LICENSE
+%license LICENSE
+
 
 %changelog
-# nothing there
+# nothing there yet
 
