@@ -209,6 +209,10 @@ function check_cfg_file {
             SOA=
             ;;
 
+        unbound )
+            (( CREATEZONE )) && CLASS=
+            ;;
+
         bind )
             if (( CREATEZONE )) && [[ ! "$SOA" ]] ; then
                 echo "ERROR: The parameter SOA is mandatory when OUTPUTFMT=bind and CREATEZONE=1." >&2
