@@ -17,11 +17,12 @@ All parameters mentioned in this document are described in the Hesutils configur
 Configuration flow
 ------------------
 
-The general configuration flow of both home path modifications and FILSYS record generation, are shown in this diagram:
+The general configuration flow of both home path modifications and FILSYS record generation, are shown in this diagram (click on the picture for a larger version):
 
-.. image::  images/hes_filsys_flow.png
-    :alt:   Hesutils FILSYS configuration flow diagram
-    :align: center
+.. image::  images/hes_filsys_flow_small.png
+    :target: images/hes_filsys_flow.png
+    :alt:    Hesutils FILSYS configuration flow diagram
+    :align:  center
 
 
 
