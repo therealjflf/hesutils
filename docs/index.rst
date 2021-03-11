@@ -36,20 +36,19 @@ DNS server configuration
 - `Dnsmasq <srv_dnsmasq.rst>`_
 - `Unbound <srv_unbound.rst>`_
 - `Bind 9 <srv_bind9.rst>`_
-- `Choosing a TTL for Hesiod records <srv_ttl.rst>`_
 
 
 Hesiod client configuration
 ---------------------------
 
-- `A tale of two models: Automount vs. FILSYS <client_autofs.rst>`_
-- `Hesiod on Linux clients <client_linux.rst>`_
-- `Hesiod on BSD clients <client_bsd.rst>`_
+- `A tale of two models: AutoFS vs. FILSYS <client_autofs.rst>`_
+- Hesiod on Linux clients
+- Hesiod on BSD clients
 
 
 Hesiod tips, tricks and examples
 --------------------------------
 
-- `Basic examples <ex_basic.rst>`_
-- `Advanced examples <ex_advanced.rst>`_
+- Basic examples
+- Advanced examples
 
