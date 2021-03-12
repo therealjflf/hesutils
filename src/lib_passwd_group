@@ -156,13 +156,11 @@ function parse_group {
             # only if we know the user already, and if it's not their primary group
             if [[ " ${!hesusers[@]} " =~ " $member " ]] ; then
                 if [[ ${group[2]} != ${primarygid[$member]} ]] ; then
-                    (( USERGRPLIST )) && grplists[${member}]+="${group[2]}:"
+                    (( USERGRPLIST )) && grplists[${member}]+="${group[0]}:"
+                    # we'll clean the trailing final colon in lib_output  ^
                     groupmembers[${group[2]}]+="${member},"
                 fi
             fi
-
-            # trim the trailing grplist colon, if any
-            grplists[${member}]=${grplists[${member}]%:}
 
         done < <(echo "${group[3]},")
         # without the comma above ^ the read can miss the last member...

@@ -166,7 +166,7 @@ function hes_output_offset {
                         ;;
                 esac
 
-            done < <(echo ${grplists[$user]} | $sanitize)
+            done < <(echo ${grplists[$user]%:} | $sanitize)
         done
 
         echo
