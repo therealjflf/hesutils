@@ -151,6 +151,8 @@ function hes_output_offset {
         for uid in ${!uid2user[@]} ; do
             user=${uid2user[$uid]}
             while read line ; do
+                # don't emit empty GRPLIST records
+                (( ${#line} )) || break
 
                 case $OUTPUTFMT in
                     dnsmasq )
