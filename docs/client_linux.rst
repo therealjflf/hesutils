@@ -82,20 +82,20 @@ Configuring Hesiod is pretty straightforward:
 
 #. Configure ``/etc/nsswitch.conf`` to use Hesiod, for example::
 
-   passwd:         compat hesiod
-   group:          compat hesiod
-   shadow:         compat
-   gshadow:        files
+    passwd:         compat hesiod
+    group:          compat hesiod
+    shadow:         compat
+    gshadow:        files
 
-   hosts:          files mdns4_minimal [NOTFOUND=return] dns
-   networks:       files
+    hosts:          files mdns4_minimal [NOTFOUND=return] dns
+    networks:       files
 
-   protocols:      db files hesiod
-   services:       db files hesiod
-   ethers:         db files
-   rpc:            db files
+    protocols:      db files hesiod
+    services:       db files hesiod
+    ethers:         db files
+    rpc:            db files
 
-   netgroup:       #nis
+    netgroup:       #nis
 
 
 And that's it!
@@ -128,19 +128,19 @@ Testing is pretty straightforward.
 
 #. Check that you can fetch the records::
 
-   $ hesinfo joe passwd
-   joe:*:5000:5000:,,,:/home/joe:/bin/bash
+    $ hesinfo joe passwd
+    joe:*:5000:5000:,,,:/home/joe:/bin/bash
 
-   $ hesinfo joesgroup group
-   joesgroup:x:5000:joe
+    $ hesinfo joesgroup group
+    joesgroup:x:5000:joe
 
-   $ hesinfo joe grplist
-   subgroup1:subgroup2
+    $ hesinfo joe grplist
+    subgroup1:subgroup2
 
 #. Check that it works through NSS too::
 
-   $ id joe
-   uid=5000(joe) gid=5000(joesgroup) groups=5000(joesgroup),5001(subgroup1),5002(subgroup2)
+    $ id joe
+    uid=5000(joe) gid=5000(joesgroup) groups=5000(joesgroup),5001(subgroup1),5002(subgroup2)
 
 
 
