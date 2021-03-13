@@ -78,6 +78,7 @@ libfiles=( lib_check_cfg
 # bunch of tables to help the lookups that we'll do later.
 
 declare -a uid2user         # index: UID        ->  user name
+declare -A user2uid         # index: user name  ->  UID
 declare -A hesusers         # index: user name  ->  /etc/passwd string
 declare -A primarygid       # index: user name  ->  primary GID
 declare -A grplists         # index: user name  ->  GIDs the user belongs to

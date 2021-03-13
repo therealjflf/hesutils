@@ -81,7 +81,10 @@ function parse_passwd {
         fi
 
         # We need to add the user to the list of members of their primary group
-        groupmembers[${passwd[3]}]+="${passwd[0]},"
+        (( FULLMEMBERLIST )) && case $NAMELISTS in
+            0)  groupmembers[${passwd[3]}]+="${passwd[2]}," ;;
+            1)  groupmembers[${passwd[3]}]+="${passwd[0]}," ;;
+        esac
 
         # Then we need to transform the passwd path into the mount path.
         # This is done inside the FILSYS functions (whether or not FILSYS
@@ -100,6 +103,7 @@ function parse_passwd {
 
         # and finally, store that user's data
         uid2user[${passwd[2]}]="${passwd[0]}"
+        user2uid[${passwd[0]}]="${passwd[2]}"
         primarygid[${passwd[0]}]=${passwd[3]}
         hesusers[${passwd[0]}]="$(IFS=: ; echo "${passwd[*]}")"
 
@@ -126,6 +130,7 @@ function parse_passwd {
 function parse_group {
 
     local delayedwarnings=""
+    local tmp
 
     (( verbose )) && echo -en "\nProcessing the group file entries: " >&2
 
@@ -150,15 +155,23 @@ function parse_group {
             # a side effect of the extra comma is the possibility of empty fields
             [[ "$member" ]] || continue
 
-            # /etc/groups contains the membership list of each group. Grplists
-            # are the opposite: lists of secondary groups of each user.
+            # grplists contains the membership list of a given user
+            # groupmembers contains the membership list of a given group
 
             # only if we know the user already, and if it's not their primary group
             if [[ " ${!hesusers[@]} " =~ " $member " ]] ; then
                 if [[ ${group[2]} != ${primarygid[$member]} ]] ; then
-                    (( USERGRPLIST )) && grplists[${member}]+="${group[0]}:"
-                    # we'll clean the trailing final colon in lib_output  ^
-                    groupmembers[${group[2]}]+="${member},"
+
+                    (( USERGRPLIST )) && case $NAMELISTS in
+                        0)  grplists[${member}]+="${group[2]}:" ;;
+                        1)  grplists[${member}]+="${group[0]}:" ;;
+                    esac
+                    # we'll clean the trailing final colon in lib_output
+
+                    (( FULLMEMBERLIST )) && case $NAMELISTS in
+                        0)  groupmembers[${group[2]}]+="${user2uid[$member]}," ;;
+                        1)  groupmembers[${group[2]}]+="${member}," ;;
+                    esac
                 fi
             fi
 
