@@ -43,7 +43,7 @@ Hesiod client configuration
 
 - `A tale of two models: AutoFS vs. FILSYS <client_autofs.rst>`_
 - `Hesiod on Linux clients <client_linux.rst>`_
-- Hesiod on BSD clients
+- `Client-side record caching <client_caching.rst>`_
 
 
 Hesiod tips, tricks and examples
