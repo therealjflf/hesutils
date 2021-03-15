@@ -49,6 +49,7 @@ Hesiod client configuration
 Hesiod tips, tricks and examples
 --------------------------------
 
+- `Getting started: testing Hesiod locally <ex_localtest.rst>`_
 - Basic examples
 - Advanced examples
 

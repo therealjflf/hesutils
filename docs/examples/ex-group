@@ -1,0 +1,12 @@
+# normal group, with some non-Hesiod users
+joe:x:5000:joe,nothesiod,badprigrp,someoneelse
+
+# a secondary group
+secondary:x:5900:joe
+
+# group missing a field
+gmissingfield:x:5901
+
+# a malformed but valid group
+malformed:x:5902:,,
+

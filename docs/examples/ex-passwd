@@ -1,0 +1,15 @@
+# very standard user
+joe:x:5000:5000:,,,:/home/joe:/bin/bash
+
+# not a Hesiod user
+nothesiod:x:4000:5000:::
+
+# primary group not a Hesiod group
+badprigrp:x:5001:4000:::
+
+# missing last field -- not valid
+missingfield:x:5002:5002::/home/joe
+
+# last field but missing shell -- valid (uses default client shell)
+missingshell:x:5003:5003::/home/joe:
+
