@@ -23,25 +23,29 @@ Security limitations in the DNS protocol have been known for decades, and there 
 
 A starting point for readers without any familiarity to the topic could be Cloudflare's introduction to DNS security: `<https://www.cloudflare.com/learning/dns/dns-security/>`__
 
+**Important note:** The standard Glibc DNS stub resolver doesn't support any form of record validation or encryption. To work around this issue you will need to run a local recursive, caching, validating resolver on the clients. All DNS traffic will then go through that resolver, which will provide the security services. For more details, see `Client-side record caching <client_caching.rst>`__.
+
 
 Record authenticity and integrity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Record authenticity is the question:
 
-- was my Hesiod answer provided by the right server (the zone owner), or did someone else impersonate it?
+- was my Hesiod answer provided by the right source (the zone owner), or did someone else impersonate it?
 
 Record integrity is the question:
 
-- has my Hesiod answer been modified between the DNS server and myself?
+- has my Hesiod answer been modified between the authoritative DNS server and myself?
 
 In other words, we want to be sure that we received an unmodified answer from the right server.
 
 
-Without those guarantees, an attacker might be able to answer a Hesiod request with forged records, which could compromise system integrity: changed home directories, changed shells (executing an attacker-provided binary at login), changed group memberships, etc. Because of this, record authenticity is absolutely critical for a sane Hesiod deployment.
+Without those guarantees, especially record authenticity, an attacker might be able to answer a Hesiod request with forged records, which could compromise system integrity: changed home directories, changed shells (executing an attacker-provided binary at login), changed group memberships, etc. Because of this, record authenticity is absolutely critical for a sane Hesiod deployment.
 
 
 The DNS answer to these is called the `Domain Name System Security Extensions <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`__, or DNSSEC. With DNSSEC the records of a zone are signed with a private key, which both certifies that they come from the zone owner, and allows the resolver to check whether the records have been tampered with.
+
+DNSSEC server configuration and record signing is out of the scope of this Hesiod-centric documentation. You will find numerous tutorials and references on the Internet, for all sorts of authoritative DNS servers. As often, a good starting point is the `DNSSEC Wikipedia page <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`__.
 
 
 On-wire data confidentiality
@@ -57,6 +61,8 @@ Using DNSSEC, forged Hesiod answers would be rejected by the client's resolver. 
 
 The answer to this problem is to encrypt the DNS requests and answers between the client and the server. Currently the two main techniques are `DNS-over-TLS <https://en.wikipedia.org/wiki/DNS_over_TLS>`__ and `DNS-over-HTTPS <https://en.wikipedia.org/wiki/DNS_over_HTTPS>`__.
 
+Like DNSSEC, setting up and enabling DNS-over-X on DNS server is out of scope for this documentation. Google is your friend.
+
 
 
 User authentication
@@ -66,14 +72,14 @@ Once we have the guarantee that we received unmodified records from the DNS serv
 
 When a user logs in, the system performs two separate tasks:
 
-- user authorization (do I know you?);
+- user identification (do I know you?);
 
 - and user authentication (how can you prove that you are who you say you are?).
 
-Most often this comes under the guise of a login name and a password.
+Most often this comes under the guise of a login name and a password, but other methods are available: biometric data, security tokens, etc.
 
 
-There are various elements to user authorization, such as group memberships, home directory, shell, etc. All of those are provided in Hesiod records, so the first part, authorization, is taken care of. But what about authentication?
+There are various elements to user identification, such as group memberships, home directory, shell, etc. Hesiod is primarily a user identification mechanism, and as such it provides all that information. But it doesn't serve any authentication information.
 
 
 Password logins
@@ -83,10 +89,13 @@ The traditional computer authentication method is the password. When this was in
 
 As it turned out, this didn't cut it. Increasing computing power made it easy to brute-force the hashes. Then the hashes were salted and computed with cryptographically-secure hash functions, to make things a bit more complicated. And finally the hashes were moved out of the ``/etc/passwd`` file, into ``/etc/shadow`` with reduced permissions.
 
-With the original setup, the password hash would be transmitted via Hesiod with the rest of the ``passwd`` entry. That made *everybody's* hashes visible to an attacker sniffing the wire, which was immediately understood to be a major security weakness. So the good people at MIT's Project Athena came up with another tool to deal with authentication: `Kerberos <https://en.wikipedia.org/wiki/Kerberos_(protocol)>`_.
+With the original setup, the password hash would be transmitted via Hesiod with the rest of the ``passwd`` entry. That provided authentication data together with the indentification data, but the side effect was that it made *everybody's* hashes visible to an attacker sniffing the wire. That was immediately understood to be a major security weakness, so the good people at MIT's Project Athena came up with another tool to deal with authentication: `Kerberos <https://en.wikipedia.org/wiki/Kerberos_(protocol)>`_.
 
 
-Today passwords are no longer present in ``/etc/password``. Moreover, passwords are no longer the only form of authentication. `Multi-factor authentication <https://en.wikipedia.org/wiki/Multi-factor_authentication>`_ is becoming a requirement in many larger sites, and hardware security dongles are fairly common. Hesiod has absolutely no way of representing such authentication mechanisms right now. We need something else. And while it has its defaults, Kerberos is one of the possible solutions (albeit not -- yet? -- for MFA).
+Today passwords are no longer present in ``/etc/password``. Moreover, passwords are no longer the only form of authentication. `Multi-factor authentication <https://en.wikipedia.org/wiki/Multi-factor_authentication>`_ is becoming a requirement in many larger sites, and hardware security dongles are fairly common. Hesiod, being mainly an identification mechanism, has absolutely no way of representing such authentication mechanisms right now. We need something else. While it has its defaults, Kerberos (or one of its variants like AD) is the industry standard.
+
+Kerberos in itself is more than a simple authentication method. It can provide single sign-on capabilities to various services that support it -- this is in fact its main objective. So the benefits of deploying Kerberos go further than merely allowing a user to log into a remote node.
+
 
 As for the Hesutils, ``hesgen``  won't even try to insert the password hashes back into the ``passwd`` records -- in fact it will *always* overwrite the second field with ``*``, telling the client systems that password logins for that user are disabled and they should authenticate using a different method. So you need another authentication mechanism.
 

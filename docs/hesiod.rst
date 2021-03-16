@@ -141,12 +141,15 @@ For a given user, let's call him ``joe`` with ``uid 5001``, belonging to the pri
 
 - ``5000.gid.<domain>`` also providing the ``users`` group's ``/etc/group`` entry;
 
-- ``joe.grplist.<domain>`` providing the list of groups of which ``joe`` is a member.
+- ``joe.grplist.<domain>`` providing the list of secondary groups of which ``joe`` is a member.
 
 The last record is the only one that doesn't copy directly the data available in a standard UNIX file.
 
 
-All those record types are mandatory, therefore a single user is identified by a minimum 5 separate records. In RFC 1034/1035 syntax, ``joe``'s records may look like this::
+The PASSWD and UID records are mandatory for each user. The GROUP and GID records are mandatory for each group. The GRPLIST records are optional, and will only be present if the user is a member of secondary groups.
+
+
+In RFC 1034/1035 syntax, ``joe``'s records may look like this::
 
     ; Users
     joe.passwd          IN  TXT    "joe:*:5001:5000::/mnt/nfs/home/joe:/bin/bash"
@@ -155,9 +158,11 @@ All those record types are mandatory, therefore a single user is identified by a
     ; Groups
     users.group         IN  TXT    "users:x:5000:joe,user2,user3"
     5000.gid            IN  CNAME  users.group
+    extra.group         IN  TXT    "extra:x:5002:joe"
+    5002.gid            IN  CNAME  extra.group
 
     ; Group lists
-    joe.grplist         IN  TXT    "5000:"
+    joe.grplist         IN  TXT    "5002"
 
 
 An additional, optional type of record called ``filsys`` can provide per-user home directory information to the automounter daemon of the client machines. That way remote home directories over NFS or other filesystems can be mounted on demand when the user logs in.
