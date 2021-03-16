@@ -50,6 +50,6 @@ Hesiod tips, tricks and examples
 --------------------------------
 
 - `Getting started: testing Hesiod locally <ex_localtest.rst>`_
-- Basic examples
+- `Basic examples <ex_basic.rst>`_
 - Advanced examples
 
