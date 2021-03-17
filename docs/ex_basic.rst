@@ -231,7 +231,7 @@ Modifying the home path
 Let's say that we have a couple of VMs running on a system and we want to provide identification services to the VM. The next examples show some use cases.
 
 
-**Note:** In the following examples ``joe`` is the type specimen of the user species. While I am only using a single such account in my examples, it can be assumed that there are lots of almost-identical Joe and Jane accounts for the dwellers of this cold, dark electronic world.
+**Note:** In the following examples ``joe`` is the type specimen of the user species. While I am only using a single such account in my examples, it can be assumed that there are almost-identical Joe and Jane accounts for the herds of dwellers of this cold, dark electronic world.
 
 
 
@@ -351,8 +351,8 @@ Re-running ``hesgen`` gives us what we expect::
 
 
 
-Example 4: use a map script
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Example 4: using a map script
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finally, let's add another layer of complexity.
 
@@ -451,4 +451,105 @@ And re-running ``hesgen``, we obtain our final glorious set of records, using th
     ; Group lists
     joe.grplist     TXT    "extragrp"
     wile.grplist    TXT    "coyote"
+
+
+
+Example 5: client groups
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+If it weren't enough already, middle management has decided to impose a new fashionable tool that comes in pre-built VMs. Due to some random path conflict (I just can't think of a example right now, but bear with me), the user homes aren't mounted in the same place in those VMs.
+
+So we have:
+
+- group 1
+    - normal users: ``/nfs/home/<username>``;
+    - admin: ``/home/admin``;
+    - new users: ``/coyote/<username>``.
+
+- group 2 (the VMs)
+    - normal users: ``/mnt/home/<username>``;
+    - admin: ``/home/admin``;
+    - new users: ``/coyote/<username>``.
+
+
+In that case, we need *multiple distinct records for the same users*, and a mechanism to pick one of the records (either on the server or on the client).
+
+The problem is, we can't represent that in a single zone. We *could* have two PASSWD records for the same user, for example, but which one to choose if the server returned more than one to the client? The Glibc NSS module would take the last one, and that's about it. There is no mechanism in DNS or Hesiod to say "if this machine matches a certain characteristic, then use that record in the list".
+
+I am sure that old DNS hands will have already thought of various mechanisms to work around the issue. Essentially they boil down to a simple idea: we'll need different zones with different records for the different machine groups. You can do that with views and stuff, but with Hesiod you can do that in a much simpler way.
+
+**Create two zones with different LHS!**
+
+That implies running ``hesgen`` twice with different parameters to fill in each zone.
+
+
+Let's use that configuration file for group 1::
+
+    $ cat /tmp/group1.conf
+
+    LHS=.grp1
+    RHS=.example.com
+    FULLMEMBERLIST=1
+    OUTPUTFMT=bind
+    SOA=( ns.example.com. admin.example.com. 1 7200 3600 1209600 3600 )
+    HOMESEDMOUNT='s:^:/nfs:'
+    FSMAPFILE=/tmp/map.conf
+    FSCOMMAND=/tmp/map.sh
+
+We've added LHS and RHS, removed the ``CREATEZONE=0`` to have a full zone, and added a fake SOA (mandatory when creating a zone in BIND format).
+
+Running ``hesgen`` with the same users as previously, we obtain (edited for clarity)::
+
+    $ORIGIN  grp1.example.com.
+
+    ; Users
+    joe.passwd      TXT    "joe:*:5000:5000::/nfs/home/joe:"
+    wile.passwd     TXT    "wile:*:5002:5002::/coyote/wile:"
+    admin.passwd    TXT    "admin:*:5700:5700::/home/admin:"
+
+That's exactly what we want for the group 1 clients.
+
+
+The configuration for group 2 is almost identical, only ``LHS`` and ``HOMESEDMOUNT`` change::
+
+    $ cat /tmp/group2.conf
+
+    LHS=.grp2
+    RHS=.example.com
+    FULLMEMBERLIST=1
+    OUTPUTFMT=bind
+    SOA=( ns.example.com. admin.example.com. 1 7200 3600 1209600 3600 )
+    HOMESEDMOUNT='s:^:/mnt:'
+    FSMAPFILE=/tmp/map.conf
+    FSCOMMAND=/tmp/map.sh
+
+And we obtain, again edited for clarity::
+
+    $ORIGIN  grp2.example.com.
+
+    ; Users
+    joe.passwd      TXT    "joe:*:5000:5000::/mnt/home/joe:"
+    wile.passwd     TXT    "wile:*:5002:5002::/coyote/wile:"
+    admin.passwd    TXT    "admin:*:5700:5700::/home/admin:"
+
+And that's the right thing for group 2 clients.
+
+
+Now that we have two zones, we only need to tell the clients which zone to use.
+
+On group 1 clients::
+
+    $ cat /etc/hesiod.conf
+
+    lhs=.grp1
+    rhs=.example.com
+    classes=IN
+
+And on group 2 clients::
+
+    $ cat /etc/hesiod.conf
+
+    lhs=.grp2
+    rhs=.example.com
+    classes=IN
 
