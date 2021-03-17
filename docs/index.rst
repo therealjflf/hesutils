@@ -50,6 +50,6 @@ Hesiod tips, tricks and examples
 --------------------------------
 
 - `Getting started: testing Hesiod locally <ex_localtest.rst>`_
-- `Basic examples <ex_basic.rst>`_
-- Advanced examples
+- `Basic examples <ex_basic.rst>`_ without FILSYS
+- `Advanced examples <ex_advanced.rst>`_ with FILSYS
 
