@@ -126,8 +126,8 @@ Which is precisely what we wanted.
 
 
 
-FILSYS path transformation
---------------------------
+FILSYS transformations
+----------------------
 
 Now comes the real problem. As decribed in `The curious case of the multiple home paths <hes_homepaths.rst>`_, when creating FILSYS records we are dealing with three separate paths:
 
@@ -186,7 +186,7 @@ The sed commands to transform the *passwd path* into the other two are::
     $ echo /nfs/userhomes/user | sed 's#.*/#/home/#'
     /home/user
 
-And our two parameters become::
+So our two parameters become::
 
     HOMESEDEXPORT='s#.*/#/export/home/#'
     HOMESEDMOUNT='s#.*/#/home/#'
@@ -231,7 +231,7 @@ Running ``hesgen`` again, we obtain the expected output::
 The map file and command
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Just like in the non-FILSYS case, there are two additional mechanisms to modify the output:
+Just like in the non-FILSYS case (see `Basic examples <ex_basic.rst>`_), there are two additional mechanisms to modify the output:
 
 - the map file specified by the ``FSMAPFILE`` parameter;
 - and the map command specified by the ``FSCOMMAND`` parameter.
@@ -242,23 +242,62 @@ The FSCOMMAND is called in the exact same way, with the user's passwd line pre-s
 
     $FSCOMMAND "joe" "x" "5000" "5000" "" "/home/joe" ""
 
+Those mechanisms apply per user. For each user, the map file will be read if ``FSMAPFILE`` is defined, then the map command will be called if ``FSCOMMAND`` is defined.
 
-The format of both the contents of the map file and the output of the map command is::
+
+The contents of the file and the output of the command are parsed to keep only lines starting with either the current username, or ``*``. Then what is done depends on the contents of the line.
+
+#. ``<user name>|*``
+
+   If nothing else appears in the line, then the FILSYS record for the current user is cleared.
+
+#. ``<user name>  <mount path>``
+
+   If there are only two fields and the first one is the username, then the *mount path* in the PASSWD record of the current user is changed to the value of the second field. If the first field is ``*``, then the line is ignored.
+
+   This is the same behaviour as in the non-FILSYS case.
+
+#. A line in one of the following formats::
 
     <user name>|*  AFS  <export path>  <mount options>  <mount path>
     <user name>|*  NFS  <export path>  <server>  <mount options>  <mount path>
     <user name>|*  <FS type>  <device>  <mount options>  <mount path>
 
-So essentially the full contents of a FILSYS record, after either the username or ``*``.
+   So essentially the full contents of a FILSYS record, after either the username or ``*``.
 
-The behaviour is slightly different in those two cases:
+   If the first field is the username, the FILSYS record for that user is changed **and** the *mount path* in their PASSWD record is changed to the value of the last field.
 
-- with the username, the FILSYS record for that user is changed **and** the *mount path* from that new record is used as the home path in the user's PASSWD records;
+   If the first field is ``*``, then only the FILSYS record for that user is changed.
 
-- with the ``*``, only the FILSYS record for that user is changed.
+If multiple lines match in either the map file or the output of the map command for the current user, then they're processed one after the other in order of appearance and their effects are cumulative.
+
+**Note:** Empty lines and comments starting with ``#`` are ingnored, including inline comments.
 
 
-I won't describe this any further, nor provide examples of use. This convoluted mechanism was designed to support the FILSYS model, where a user can have more than one filesystem. But it doesn't make much sense within the limitations of the AutoFS model. I left it in because the codepath is shared with the non-FILSYS case (and this one is really useful), and just in case someone has a really twisted use case that can't be solved in any other way (I can't think of any).
+Some examples of lines and their effect:
+
+::
+    *                       # clear FILSYS records for any user
+                            # this effectively cancels AUTOFILSYS
+
+::
+    joe                     # clear joe's FILSYS record
+
+::
+    admin  /home/admin      # changes admin's home dir in the PASSWD record
+
+::
+    # overwrite joe's FILSYS record, and change the home dir in PASSWD
+    joe  NFS /export/home/joe nfsserver - /home/joe
+
+::
+    # overwite any user's FILSYS record, but don't touch PASSWD
+    *  NFS /export/projects/X42 nfsserver - /projects/X42
+
+
+If you think that the whole thing is a bit overblow, you're right. But surprisingly it's incomplete as it stands. This convoluted mechanism was designed to support the full FILSYS model, where a user can have more than one filesystem. But it doesn't make much sense within the limitations of the AutoFS model, so multiple FILSYS per user hasn't been implemented in ``hesgen``.
+
+I left the parsing and processing logic in the code because the codepath is shared with the non-FILSYS case (and this one is really useful), and if it ever happens that someone has a really twisted use case that can't be solved in any other way (I can't think of any).
 
 If you are one of those poor souls, good luck. You're on your own.
 

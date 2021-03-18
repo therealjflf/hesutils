@@ -46,7 +46,7 @@ On the other hand, a very short TTL will cause problems if there is a network is
 **Note**: There is no *guarantee* that the cache will help during a network outage, but it *might*. If a record's TTL expires 1 second after the network goes down, the cache will be essentially useless. Having long TTL improves the probability of having still-valid cached records, but it doesn't guarantee it.
 
 
-As rough ballparks, I might suggest those values for both positive TTL:
+As rough ballparks, I might suggest those values for positive TTL:
 
 - Wired network, redundant DNS servers: 60 to 300 seconds (1 to 5 minutes)
 

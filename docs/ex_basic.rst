@@ -457,7 +457,7 @@ And re-running ``hesgen``, we obtain our final glorious set of records, using th
 Example 5: client groups
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-If it weren't enough already, middle management has decided to impose a new fashionable tool that comes in pre-built VMs. Due to some random path conflict (I just can't think of a example right now, but bear with me), the user homes aren't mounted in the same place in those VMs.
+If it weren't enough already, middle management has decided to impose a new fashionable tool that comes in pre-built VMs. Due to some random path conflict (I just can't think of a good example right now, but bear with me), the user homes aren't mounted in the same place in those VMs.
 
 So we have:
 
@@ -476,7 +476,7 @@ In that case, we need *multiple distinct records for the same users*, and a mech
 
 The problem is, we can't represent that in a single zone. We *could* have two PASSWD records for the same user, for example, but which one to choose if the server returned more than one to the client? The Glibc NSS module would take the last one, and that's about it. There is no mechanism in DNS or Hesiod to say "if this machine matches a certain characteristic, then use that record in the list".
 
-I am sure that old DNS hands will have already thought of various mechanisms to work around the issue. Essentially they boil down to a simple idea: we'll need different zones with different records for the different machine groups. You can do that with views and stuff, but with Hesiod you can do that in a much simpler way.
+I am sure that old DNS hands will have already thought of various mechanisms to work around the issue. Essentially they boil down to a simple idea: we'll need different zones with different records for the different machine groups. You can do that with views and stuff, but with Hesiod you can also do that in a much simpler way.
 
 **Create two zones with different LHS!**
 
@@ -484,8 +484,6 @@ That implies running ``hesgen`` twice with different parameters to fill in each 
 
 
 Let's use that configuration file for group 1::
-
-    $ cat /tmp/group1.conf
 
     LHS=.grp1
     RHS=.example.com
@@ -512,8 +510,6 @@ That's exactly what we want for the group 1 clients.
 
 The configuration for group 2 is almost identical, only ``LHS`` and ``HOMESEDMOUNT`` change::
 
-    $ cat /tmp/group2.conf
-
     LHS=.grp2
     RHS=.example.com
     FULLMEMBERLIST=1
@@ -535,21 +531,15 @@ And we obtain, again edited for clarity::
 And that's the right thing for group 2 clients.
 
 
-Now that we have two zones, we only need to tell the clients which zone to use.
+Now that we have two zones, we only need to tell the clients which zone to use, in ``/etc/hesiod.conf``.
 
 On group 1 clients::
 
-    $ cat /etc/hesiod.conf
-
     lhs=.grp1
     rhs=.example.com
-    classes=IN
 
 And on group 2 clients::
 
-    $ cat /etc/hesiod.conf
-
     lhs=.grp2
     rhs=.example.com
-    classes=IN
 

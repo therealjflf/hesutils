@@ -146,7 +146,7 @@ The map file, which path is stored in ``FSMAPFILE``, contains static records. It
 
 The map command, which name or full path is stored in ``FSCOMMAND``, is executed once per user exported to Hesiod. It is called with the contents of the fstab entry for that user passed as parameters, pre-split. The command returns records in one of the formats described in `Note on the various FILSYS formats`_.
 
-Neither the map file nor the command are expected to contain or return records for each and every Hesiod users. For example they can be used to override the automatic FILSYS records for a subset of users. The command (typically a script of some sort) allows for more refined rules to be implemented, for example changing the filesystem servers or paths based on group memberships.
+Neither the map file nor the command are expected to contain or return records for each and every Hesiod user. For example they can be used to override the automatic FILSYS records for a subset of users. The command (typically a script of some sort) allows for more refined rules to be implemented, for example changing the filesystem servers or paths based on group memberships.
 
 The records can either be user-specific, with the first field being the user name, or generic, with the first field being ``*``::
 
@@ -178,10 +178,4 @@ In both cases, the record obtained will overwrite the current existing FILSYS re
 If it's a user-specific record, then the mount path from the record overwrites the existing mount path for that user. If it's a generic record, then the existing mount path stays the same.
 
 When encountering multiple records of either type, the last one is the effective one.
-
-
-Examples
-~~~~~~~~
-
-Examples of usage of the map file and command are included in `Advanced examples <ex_advanced.rst>`__.
 
