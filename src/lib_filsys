@@ -61,7 +61,7 @@ function sed_paths {
     # the mount path transformation applies to both with and without FILSYS
 
     if [[ "$HOMESEDMOUNT" ]] ; then
-        if tmp="$( echo $mountpath | sed "$HOMESEDMOUNT" 2>/dev/null )" ; then
+        if tmp="$( echo $mountpath | sed -e "$HOMESEDMOUNT" 2>/dev/null )" ; then
             mountpath="$tmp"
         else
             delayedwarnings+="WARNING: HOMESEDMOUNT sed command failed for user \"${passwd[0]}\", passwd path \"${passwd[5]}\"\n"
@@ -71,7 +71,7 @@ function sed_paths {
     # the export path transformation is only useful for FILSYS setups
 
     if (( FILSYS )) && [[ "$HOMESEDEXPORT" ]] ; then
-        if tmp="$( echo $exportpath | sed "$HOMESEDEXPORT" 2>/dev/null )" ; then
+        if tmp="$( echo $exportpath | sed -e "$HOMESEDEXPORT" 2>/dev/null )" ; then
             exportpath="$tmp"
         else
             delayedwarnings+="WARNING: HOMESEDEXPORT sed command failed for user \"${passwd[0]}\", passwd path \"${passwd[5]}\"\n"
